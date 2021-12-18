@@ -19,4 +19,25 @@ class Room(DefaultRoom):
     properties and methods available on all Objects.
     """
 
-    pass
+    # pull in handlers for traits, equipment, mutations, talents
+    @lazy_property
+    def traits(self):
+        """TraitHandler that manages room traits."""
+        return TraitHandler(self)
+
+    @lazy_property
+    def mutations(self):
+        """TraitHandler that manages room mutations."""
+        # note: These will be used rarely for rooms
+        return TraitHandler(self, db_attribute='mutations')
+
+    @lazy_property
+    def talents(self):
+        """TraitHandler that manages room talents."""
+        # note: These will be used rarely for rooms
+        return TraitHandler(self, db_attribute='talents')
+
+    @lazy_property
+    def status_effects(self):
+        """TraitHandler that manages room status effects."""
+        return TraitHandler(self)
