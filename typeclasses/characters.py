@@ -8,6 +8,17 @@ creation commands.
 
 """
 from evennia import DefaultCharacter
+from evennia.utils import lazy_property
+from evennia import utils as utils
+from world.handlers.equipment import EquipHandler
+from world.handlers.traits import TraitHandler
+from world.randomness_controller import distro_return_a_roll as roll
+from world.randomness_controller import distro_return_a_roll_sans_crits as rarsc
+from world.handlers import talents, mutations, body_parts#, status_effects
+from evennia.utils.logger import log_file
+from evennia import gametime
+from evennia import create_script
+from evennia.utils import evform, evtable
 
 
 class Character(DefaultCharacter):
@@ -53,14 +64,8 @@ class Character(DefaultCharacter):
     @lazy_property
     def status_effects(self):
         """TraitHandler that manages room status effects."""
-        return TraitHandler(self)
+        return TraitHandler(self, db_attribute='status_effects')
 
-    @lazy_property
-    def body_parts(self):
-        """Handler for parts of the body. For a normal human, this would be
-        head, torso, right arm, left arm, right leg, left leg. Note that
-        equipment is associated with individual parts of the body."""
-        return BodyPartHandler(self)
 
     @lazy_property
     def equipment(self):
@@ -70,12 +75,11 @@ class Character(DefaultCharacter):
 
     def at_object_creation(self):
         "Called only at object creation and with update command."
-        # clear traits, ability_scores, talents, and mutations
+        # clear traits and trait-like containers
         self.traits.clear()
         self.mutations.clear()
         self.talents.clear()
-        self.status_effects.clear()
-        self.body_parts.clear()
+        #self.status_effects.clear()
         ## Define initial attribute score traits and the secondary traits that
         ## are calculated from the primary attributes
 
@@ -102,25 +106,43 @@ class Character(DefaultCharacter):
         self.traits.add(key="cp", name="Conviction Points", type="gauge", \
                         base=((self.traits.FOP.current * 5) + \
                         (self.traits.Vit.current)), extra={'learn' : 0})
-        ## mass will need to be rerolled after gender is chosen
+        ## mass and height will need to be rerolled after gender is chosen
+        # height is in cm. Weight is in kilograms
         self.traits.add(key="mass", name="Mass", type='static', \
-                        base=rarsc(180, dist_shape='very flat'), \
+                        base=rarsc(75, dist_shape='normal'), \
+                        extra={'learn' : 0})
+        self.traits.add(key="height", name="Height", type='static', \
+                        base=rarsc(170, dist_shape='normal'), \
                         extra={'learn' : 0})
         self.traits.add(key="enc", name="Encumberance", type='counter', \
                         base=0, max=(self.traits.Str.current * .5), \
                         extra={'learn' : 0})
 
         ## generate initial component parts of the body
-        self.body_parts.add(key='head', name='Head', type='head')
-        self.body_parts.add(key='tor', name='Torso', type='torso')
-        self.body_parts.add(key='rarm', name='Right Arm', type='arm')
-        self.body_parts.add(key='larm', name='Left Arm', type='arm')
-        self.body_parts.add(key='rleg', name='Right Leg', type='leg')
-        self.body_parts.add(key='lleg', name='Left Leg', type='leg')
+        body_parts.initialize_body_parts(self)
+        ## add list of empty eq slots to character db
+
 
         ## info dictionary to contain player preferences. These can be changed
         ## via player commands
         self.db.info = {'Target': None, 'Mercy': True, 'Default Attack': \
             'unarmed_strike', 'Sneaking' : False, 'Wimpy': 150, 'Yield': 250}
 
-        return TraitHandler(self)
+        # apply the initial mutations and talents. Most talents will be set
+        # to zero. Many mutations will only be added if the character gains
+        # that mutation
+        talents.apply_talents(self)
+        mutations.initialize_mutations(self)
+
+    def eq_slots_status_update(self):
+        """
+        This function pulls all of the equipment slots from the individual
+        body parts of the character. This function should be run before doing
+        anything with the Equipment Handler found in world.handlers.equipment
+        """
+        parts_list = [part for parts in self.contents if utils.inherits_from(part, 'world.handlers.BodyPart')]
+        if len(parts_list) > 0:
+            for part in parts_list:
+                self.db.equipment = {eqslot: equipped_item for slot, eq in part.db.slots}
+        else:
+            log_file("List of Body Parts is Empty.", filename="error.log")
