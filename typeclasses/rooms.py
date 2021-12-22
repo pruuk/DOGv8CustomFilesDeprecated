@@ -8,7 +8,7 @@ from evennia import utils as utils
 from evennia import DefaultRoom
 from evennia.utils.logger import log_file
 from evennia.utils import lazy_property
-from world.traits import TraitHandler
+from world.handlers.traits import TraitHandler
 import time
 from world.randomness_controller import return_a_roll as roll
 
