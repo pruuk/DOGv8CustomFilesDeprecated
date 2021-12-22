@@ -8,7 +8,7 @@ from evennia.prototypes.spawner import spawn
 from world.traits import TraitHandler
 from evennia.utils.logger import log_file
 from evennia.utils import lazy_property
-from world.traits import TraitHandler
+from world.handlers.traits import TraitHandler
 
 class Item(Object):
     """
