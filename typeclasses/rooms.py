@@ -10,7 +10,8 @@ from evennia.utils.logger import log_file
 from evennia.utils import lazy_property
 from world.handlers.traits import TraitHandler
 import time
-from world.randomness_controller import return_a_roll as roll
+from world.randomness_controller import distro_return_a_roll as roll
+from world.randomness_controller import distro_return_a_roll_sans_crits as rarsc
 
 
 class Room(DefaultRoom):
