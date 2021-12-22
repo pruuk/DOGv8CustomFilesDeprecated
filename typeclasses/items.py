@@ -5,7 +5,6 @@ Generic item classes and their base functions.
 from typeclasses.objects import Object
 from evennia import create_object
 from evennia.prototypes.spawner import spawn
-from world.traits import TraitHandler
 from evennia.utils.logger import log_file
 from evennia.utils import lazy_property
 from world.handlers.traits import TraitHandler
