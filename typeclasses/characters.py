@@ -119,9 +119,10 @@ class Character(DefaultCharacter):
                         extra={'learn' : 0})
 
         ## generate initial component parts of the body
-        body_parts.initialize_body_parts(self)
+        if len(self.contents) == 0:
+            body_parts.initialize_body_parts(self)
         ## add list of empty eq slots to character db
-
+        self.eq_slots_status_update()
 
         ## info dictionary to contain player preferences. These can be changed
         ## via player commands
@@ -140,9 +141,15 @@ class Character(DefaultCharacter):
         body parts of the character. This function should be run before doing
         anything with the Equipment Handler found in world.handlers.equipment
         """
-        parts_list = [part for parts in self.contents if utils.inherits_from(part, 'world.handlers.BodyPart')]
+        self.db.eq_slots = {}
+        parts_list =[]
+        for item in self.contents:
+            if utils.inherits_from(item, 'world.handlers.body_parts.BodyPart'):
+                parts_list.append(item)
+
         if len(parts_list) > 0:
             for part in parts_list:
-                self.db.equipment = {eqslot: equipped_item for slot, eq in part.db.slots}
+                self.db.eq_slots.update(part.db.slots)
+
         else:
             log_file("List of Body Parts is Empty.", filename="error.log")

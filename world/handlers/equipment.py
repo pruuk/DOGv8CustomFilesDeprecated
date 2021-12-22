@@ -25,7 +25,7 @@ Use:
     in an ordered fashion. It also supports `obj in character.equip` syntax
     to check whether an item is equipped
 """
-# from typeclasses.items import Equippable
+from typeclasses.items import Equippable
 from functools import reduce
 
 class EquipException(Exception):
