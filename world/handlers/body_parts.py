@@ -97,31 +97,18 @@ class Head(BodyPart):
         "Called only at object creation and with update command."
         self.traits.add(key="size", name='Size', type='static', base=100)
         self.db.type = 'head'
-        self.db.allowable_eq_slots = ['head', 'face', 'right_ear', 'left_ear',
-                                      'right_eye', 'left_eye', 'nose', 'mouth',
+        self.db.allowable_eq_slots = ['head', 'face', 'ears',
+                                      'eyes', 'nose', 'mouth',
                                       'neck']
         self.db.slots = {
             'head': None,
             'face': None,
-            'right_ear': None,
-            'left_ear': None,
-            'right_eye': None,
-            'left_eye': None,
+            'ears': None,
+            'eyes': None,
             'nose': None,
             'mouth': None,
             'neck': None
         }
-
-    def at_after_move(self):
-        """
-        Called after a move of the object has been completed.
-        """
-        if utils.inherits_from(self.location, 'typeclases.characters.Character'):
-            character = self.location
-            self.traits.add(key="hp", name="Health Points", type="gauge", \
-                            base=character.traits.hp.current * .1, extra={'learn' : 0})
-            self.traits.add(key="sp", name="Stamina Points", type="gauge", \
-                            base=character.traits.sp.current * .1, extra={'learn' : 0})
 
 
 class Torso(BodyPart):
@@ -141,17 +128,6 @@ class Torso(BodyPart):
             'quiver': None
         }
 
-    def at_after_move(self):
-        """
-        Called after a move of the object has been completed.
-        """
-        if utils.inherits_from(self.location, 'typeclases.characters.Character'):
-            character = self.location
-            self.traits.add(key="hp", name="Health Points", type="gauge", \
-                            base=character.traits.hp.current * .4, extra={'learn' : 0})
-            self.traits.add(key="sp", name="Stamina Points", type="gauge", \
-                            base=character.traits.sp.current * .4, extra={'learn' : 0})
-
 
 class Leg(BodyPart):
     """
@@ -162,25 +138,15 @@ class Leg(BodyPart):
         "Called only at object creation and with update command."
         self.traits.add(key="size", name='Size', type='static', base=100)
         self.db.type = 'leg'
-        self.db.allowable_eq_slots = ['thigh', 'lower_leg', 'foot', 'toes',
+        self.db.allowable_eq_slots = ['thighs', 'lower_legs', 'feet', 'toes',
                                       'hoof']
         self.db.slots = {
-            'thigh': None,
-            'lower_leg': None,
-            'foot': None,
+            'thighs': None,
+            'lower_legs': None,
+            'feet': None,
             'toes': None
         }
 
-    def at_after_move(self):
-        """
-        Called after a move of the object has been completed.
-        """
-        if utils.inherits_from(self.location, 'typeclases.characters.Character'):
-            character = self.location
-            self.traits.add(key="hp", name="Health Points", type="gauge", \
-                            base=character.traits.hp.current * .15, extra={'learn' : 0})
-            self.traits.add(key="sp", name="Stamina Points", type="gauge", \
-                            base=character.traits.sp.current * .15, extra={'learn' : 0})
 
 
 class Arm(BodyPart):
@@ -192,26 +158,16 @@ class Arm(BodyPart):
         "Called only at object creation and with update command."
         self.traits.add(key="size", name='Size', type='static', base=100)
         self.db.type = 'arm'
-        self.db.allowable_eq_slots = ['shoulder', 'upper_arm', 'forearm',
+        self.db.allowable_eq_slots = ['shoulders', 'upper_arms', 'forearms',
                                       'hands', 'fingers']
         self.db.slots = {
-            'shoulder': None,
-            'upper_arm': None,
-            'forearm': None,
+            'shoulders': None,
+            'upper_arms': None,
+            'forearms': None,
             'hands': None,
             'fingers': None
         }
 
-    def at_after_move(self):
-        """
-        Called after a move of the object has been completed.
-        """
-        if utils.inherits_from(self.location, 'typeclases.characters.Character'):
-            character = self.location
-            self.traits.add(key="hp", name="Health Points", type="gauge", \
-                            base=character.traits.hp.current * .1, extra={'learn' : 0})
-            self.traits.add(key="sp", name="Stamina Points", type="gauge", \
-                            base=character.traits.sp.current * .1, extra={'learn' : 0})
 
 # TODO: Add body part classes for the non-standard types
 # TODO: Add function to add new body parts (due to mutation)
@@ -224,11 +180,17 @@ def initialize_body_parts(character):
     """
     # Create body part objects
     head = create_object("world.handlers.body_parts.Head", key='head')
+    head.name = f"{character.name}'s Head"
     torso = create_object("world.handlers.body_parts.Torso", key='torso')
+    torso.name = f"{character.name}'s Torso"
     right_arm = create_object("world.handlers.body_parts.Arm", key='right_arm')
+    right_arm.name = f"{character.name}'s Right Arm"
     left_arm = create_object("world.handlers.body_parts.Arm", key='left_arm')
+    left_arm.name = f"{character.name}'s Left Arm"
     right_leg = create_object("world.handlers.body_parts.Leg", key='right_leg')
+    right_leg.name = f"{character.name}'s Right Leg"
     left_leg = create_object("world.handlers.body_parts.Leg", key='left_leg')
+    left_leg.name = f"{character.name}'s Left Leg"
 
     # Add objects to character
     head.move_to(character)
@@ -237,3 +199,29 @@ def initialize_body_parts(character):
     left_arm.move_to(character)
     right_leg.move_to(character)
     left_leg.move_to(character)
+
+    # add hp and sp to body parts
+    head.traits.add(key="hp", name="Health Points", type="gauge", \
+                    base=character.traits.hp.current * .1, extra={'learn' : 0})
+    head.traits.add(key="sp", name="Stamina Points", type="gauge", \
+                    base=character.traits.sp.current * .1, extra={'learn' : 0})
+    torso.traits.add(key="hp", name="Health Points", type="gauge", \
+                    base=character.traits.hp.current * .4, extra={'learn' : 0})
+    torso.traits.add(key="sp", name="Stamina Points", type="gauge", \
+                    base=character.traits.sp.current * .4, extra={'learn' : 0})
+    right_arm.traits.add(key="hp", name="Health Points", type="gauge", \
+                    base=character.traits.hp.current * .1, extra={'learn' : 0})
+    right_arm.traits.add(key="sp", name="Stamina Points", type="gauge", \
+                    base=character.traits.sp.current * .1, extra={'learn' : 0})
+    left_arm.traits.add(key="hp", name="Health Points", type="gauge", \
+                    base=character.traits.hp.current * .1, extra={'learn' : 0})
+    left_arm.traits.add(key="sp", name="Stamina Points", type="gauge", \
+                    base=character.traits.sp.current * .1, extra={'learn' : 0})
+    right_leg.traits.add(key="hp", name="Health Points", type="gauge", \
+                    base=character.traits.hp.current * .15, extra={'learn' : 0})
+    right_leg.traits.add(key="sp", name="Stamina Points", type="gauge", \
+                    base=character.traits.sp.current * .15, extra={'learn' : 0})
+    left_leg.traits.add(key="hp", name="Health Points", type="gauge", \
+                    base=character.traits.hp.current * .15, extra={'learn' : 0})
+    left_leg.traits.add(key="sp", name="Stamina Points", type="gauge", \
+                    base=character.traits.sp.current * .15, extra={'learn' : 0})

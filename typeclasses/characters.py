@@ -124,6 +124,9 @@ class Character(DefaultCharacter):
         ## add list of empty eq slots to character db
         self.eq_slots_status_update()
 
+        # money
+        self.db.wallet = {'GC': 0, 'SC': 0, 'CC': 0}
+
         ## info dictionary to contain player preferences. These can be changed
         ## via player commands
         self.db.info = {'Target': None, 'Mercy': True, 'Default Attack': \

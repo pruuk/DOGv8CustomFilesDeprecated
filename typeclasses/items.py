@@ -8,6 +8,7 @@ from evennia.prototypes.spawner import spawn
 from evennia.utils.logger import log_file
 from evennia.utils import lazy_property
 from world.handlers.traits import TraitHandler
+from evennia import utils as utils
 
 class Item(Object):
     """
@@ -31,8 +32,10 @@ class Item(Object):
                                  "equip:false()",
                                  "get:all()"
                                  )))
-        self.db.value = self.value
-        self.db.mass = float(self.mass)
+        self.traits.add(key='val', name='Monetary Value', type='static', \
+                        base=self.value)
+        self.traits.add(key='mass', name='Mass (in Kilograms)', type='static', \
+                        base=float(self.mass))
         self.traits.add(key="hp", name="Health Points", type="gauge", \
                         base=10, extra={'learn' : 0})
 
@@ -42,12 +45,19 @@ class Item(Object):
         adding this amount of weight will make the character/NPC overencumbered.
         """
         log_file(f"trying to move {self.key} to {getter.name}", filename='item_moves.log')
-        if getter.traits.enc.current + self.db.mass > getter.traits.enc.max:
-            # this item is too heavy for the getter to pick up, cancel move
-            log_file(f"{self.name} is too heavy for {getter.name} to pick up.", \
-                     filename='item_moves.log')
-            getter.msg(f"{self.name} is too heavy for you to pick up.")
-            return False
+        if getter.traits.enc.current + self.traits.mass.current > getter.traits.enc.max:
+            if utils.inherits_from(obj, 'typeclasses.npcs.NPC') or utils.inherits_from(obj, 'typeclasses.characters.Character'):
+                # this item is too heavy for the getter to pick up, cancel move
+                log_file(f"{self.name} is too heavy for {getter.name} to pick up.", \
+                         filename='item_moves.log')
+                getter.msg(f"{self.name} is too heavy for you to pick up.")
+                return False
+            # getter is a non-character. We're trying to put something in something else
+            else:
+                log_file(f"{getter.name} is a non character/NPC and doesn't have room to fit {self.name}.", \
+                         filename='item_moves.log')
+                return False
+
         else:
             log_file(f"{getter.name} calculating new enc value.", \
                      filename='item_moves.log')
