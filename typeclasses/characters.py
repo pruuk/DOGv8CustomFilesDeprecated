@@ -124,6 +124,7 @@ class Character(DefaultCharacter):
         ## add list of empty eq slots to character db
         self.eq_slots_status_update()
 
+
         # money
         self.db.wallet = {'GC': 0, 'SC': 0, 'CC': 0}
 
@@ -145,14 +146,15 @@ class Character(DefaultCharacter):
         anything with the Equipment Handler found in world.handlers.equipment
         """
         self.db.eq_slots = {}
-        parts_list =[]
+        self.db.limbs = []
+        
         for item in self.contents:
             if utils.inherits_from(item, 'world.handlers.body_parts.BodyPart'):
-                parts_list.append(item)
+                self.db.limbs.append(item)
 
-        if len(parts_list) > 0:
-            for part in parts_list:
-                self.db.eq_slots.update(part.db.slots)
+        if len(self.db.limbs) > 0:
+            for part in self.db.limbs:
+                self.db.eq_slots[part.name] = part.db.slots
 
         else:
             log_file("List of Body Parts is Empty.", filename="error.log")

@@ -101,13 +101,13 @@ class Head(BodyPart):
                                       'eyes', 'nose', 'mouth',
                                       'neck']
         self.db.slots = {
-            'head': None,
-            'face': None,
-            'ears': None,
-            'eyes': None,
-            'nose': None,
-            'mouth': None,
-            'neck': None
+            'head' : None,
+            'face' : None,
+            'ears' : None,
+            'eyes' : None,
+            'nose' : None,
+            'mouth' : None,
+            'neck' : None
         }
 
 
@@ -138,13 +138,13 @@ class Leg(BodyPart):
         "Called only at object creation and with update command."
         self.traits.add(key="size", name='Size', type='static', base=100)
         self.db.type = 'leg'
-        self.db.allowable_eq_slots = ['thighs', 'lower_legs', 'feet', 'toes',
+        self.db.allowable_eq_slots = ['thigh', 'lower_leg', 'foot', 'toes',
                                       'hoof']
         self.db.slots = {
-            'thighs': None,
-            'lower_legs': None,
-            'feet': None,
-            'toes': None
+            'thigh' : None,
+            'lower_leg' : None,
+            'foot' : None,
+            'toes' : None
         }
 
 
@@ -158,14 +158,14 @@ class Arm(BodyPart):
         "Called only at object creation and with update command."
         self.traits.add(key="size", name='Size', type='static', base=100)
         self.db.type = 'arm'
-        self.db.allowable_eq_slots = ['shoulders', 'upper_arms', 'forearms',
-                                      'hands', 'fingers']
+        self.db.allowable_eq_slots = ['shoulder', 'upper_arm', 'forearm',
+                                      'hand', 'fingers']
         self.db.slots = {
-            'shoulders': None,
-            'upper_arms': None,
-            'forearms': None,
-            'hands': None,
-            'fingers': None
+            'shoulder' : None,
+            'upper_arm' : None,
+            'forearm' : None,
+            'hand' : None,
+            'fingers' : None
         }
 
 
