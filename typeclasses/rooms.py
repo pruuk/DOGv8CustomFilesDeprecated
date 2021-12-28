@@ -12,6 +12,7 @@ from world.handlers.traits import TraitHandler
 import time
 from world.randomness_controller import distro_return_a_roll as roll
 from world.randomness_controller import distro_return_a_roll_sans_crits as rarsc
+from world.handlers.map import Map
 
 
 class Room(DefaultRoom):
@@ -60,7 +61,7 @@ class Room(DefaultRoom):
         # subclasses and subclasses to give devs some stock rooms to wor from
 
         # size is measured in square meters. Default is a large outdoor room
-        self.trait.add(key="size", name='Room Size', type='static', base=10000)
+        self.traits.add(key="size", name='Room Size', type='static', base=10000)
         ## note that base encumberance, carrying capacity of a room is set
         ## as a square of the room size
         self.traits.add(key="enc", name="Encumberance", type='counter', \
@@ -105,3 +106,12 @@ class Room(DefaultRoom):
         # and is an average
         self.biomes.add(key='trail', name='Trail', type='static', base=0.05, \
                         extra={'condition' : 1, 'width' : 1.5})
+
+
+    def return_appearance(self, looker):
+        """ Returns custom appearance for the room, including overhead map. """
+        string = "%s\n" % Map(looker).show_map()
+        # Add all the normal stuff like room description,
+        # contents, exits etc.
+        string += "\n" + super().return_appearance(looker)
+        return string
