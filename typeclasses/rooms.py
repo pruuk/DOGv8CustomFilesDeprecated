@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Room
 
@@ -13,6 +14,7 @@ import time
 from world.randomness_controller import distro_return_a_roll as roll
 from world.randomness_controller import distro_return_a_roll_sans_crits as rarsc
 from world.handlers.map import Map
+from evennia.utils import evtable
 
 
 class Room(DefaultRoom):
@@ -91,10 +93,13 @@ class Room(DefaultRoom):
         self.traits.add(key="trackmax", name="Maximum Readable Tracks", \
                         type="static", base=(round(self.traits.size.actual / 500))) # default of 20
         # boolean info attributes of the room
-        self.db.info = {'Non-Combat Room': False, 'Outdoor Room': True, \
-                        'Zone': None, 'Environment Type': None}
+        self.db.info = {'non-combat room': False, 'outdoor room': True, \
+                        'zone': 'The Outdoors'}
         # empty db attribute dictionary for storing tracks
         self.db.tracks = {}
+
+        # add the overhead map symbol we want to use
+        self.db.map_symbol = '░'
 
         # add biome info. Biome types should be expressed in a number between 0
         # and 1. The total set of biomes added should add up to 1. The default
@@ -110,8 +115,20 @@ class Room(DefaultRoom):
 
     def return_appearance(self, looker):
         """ Returns custom appearance for the room, including overhead map. """
-        string = "%s\n" % Map(looker).show_map()
+        log_file("Starting Map creation", filename='map_debug.log')
+        #string = "%s\n" % Map(looker).show_map()
         # Add all the normal stuff like room description,
         # contents, exits etc.
-        string += "\n" + super().return_appearance(looker)
-        return string
+        log_file("Starting return map appearance", filename='map_debug.log')
+        # string += "\n" + super().return_appearance(looker)
+
+        # Putting room description and map in a table format
+        coord_string = f" Map Coordinates ---> X: {self.traits.xcord.current}, Y: {self.traits.ycord.current}"
+        map = str(Map(looker).show_map())
+        desc = str(super().return_appearance(looker))
+        table = evtable.EvTable("", coord_string,
+            table=[[desc], [Map(looker).show_map()]], border="cells")
+        table.reformat_column(0, width=60, align="l", valign="c")
+        table.reformat_column(1, width=50, align="c", valign="c")
+
+        return table

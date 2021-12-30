@@ -130,8 +130,8 @@ class Character(DefaultCharacter):
 
         ## info dictionary to contain player preferences. These can be changed
         ## via player commands
-        self.db.info = {'Target': None, 'Mercy': True, 'Default Attack': \
-            'unarmed_strike', 'Sneaking' : False, 'Wimpy': 150, 'Yield': 250}
+        self.db.info = {'target': None, 'mercy': True, 'default attack': \
+            'unarmed_strike', 'sneaking' : False, 'wimpy': 150, 'yield': 250}
 
         # apply the initial mutations and talents. Most talents will be set
         # to zero. Many mutations will only be added if the character gains
@@ -147,7 +147,7 @@ class Character(DefaultCharacter):
         """
         self.db.eq_slots = {}
         self.db.limbs = []
-        
+
         for item in self.contents:
             if utils.inherits_from(item, 'world.handlers.body_parts.BodyPart'):
                 self.db.limbs.append(item)
@@ -158,3 +158,10 @@ class Character(DefaultCharacter):
 
         else:
             log_file("List of Body Parts is Empty.", filename="error.log")
+
+
+    def at_before_move(self, destination):
+        "Called just before trying to move"
+        if self.ndb.cantmove: # replace with condition you want to test
+            return False
+        return True
