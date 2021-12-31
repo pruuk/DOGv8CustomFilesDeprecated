@@ -340,10 +340,10 @@ def find_adjacent_room_ids(room, caller):
             if adj_room_candidate:
                 if adj_room_candidate.traits.xcord.current == room.traits.xcord.current:
                     # matching X coordinate, check to north and south
-                    if adj_room_candidate.traits.ycord.current == (room.traits.xcord.current + 1):
+                    if adj_room_candidate.traits.ycord.current == (room.traits.xcord.current - 1):
                         # X matches, Y is 1 room north of room we're editing
                         adjacent_rooms.append([adj_room_candidate.id, 'north'])
-                    if adj_room_candidate.traits.ycord.current == (room.traits.xcord.current - 1):
+                    if adj_room_candidate.traits.ycord.current == (room.traits.xcord.current + 1):
                         # X matches, Y is 1 room south of room we're editing
                         adjacent_rooms.append([adj_room_candidate.id, 'south'])
                 elif adj_room_candidate.traits.ycord.current == room.traits.ycord.current:
