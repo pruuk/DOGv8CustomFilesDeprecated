@@ -5,6 +5,30 @@ from evennia.contrib.building_menu import BuildingMenu
 from evennia.utils import lazy_property
 from world.handlers.traits import TraitHandler
 
+MAP_SYMBOLS = {
+    'Crossroads' : ['|155╬|n','|255╬|n','|355╬|n','|455╬|n','|555╬|n'],
+    'EW Road' : ['|155═|n', '|255═|n', '|355═|n', '|455═|n', '|555═|n'],
+    'NS Road' : ['|155║|n', '|255║|n', '|355║|n', '|455║|n', '|555║|n'],
+    'NW Road' : ['|155╗|n', '|255╗|n', '|355╗|n', '|455╗|n', '|555╗|n'],
+    'SW Road' : ['|155╝|n', '|255╝|n', '|355╝|n', '|455╝|n', '|555╝|n'],
+    'NE Road' : ['|155╔|n', '|255╔|n', '|355╔|n', '|455╔|n', '|555╔|n'],
+    'SE Road' : ['|155╚|n', '|255╚|n', '|355╚|n', '|455╚|n', '|555╚|n'],
+    'Plains' : ['|155■|n', '|255■|n', '|355■|n', '|455■|n', '|555■|n'],
+    'Forest' : ['|043¡|n', '|143¡|n', '|243¡|n', '|343¡|n', '|443¡|n'],
+    'Jungle' : ['|043▓|n', '|143▓|n', '|243▓|n', '|343▓|n', '|443▓|n'],
+    'Mountains/Hills' : ['|110^|n', '|210^|n', '|310^|n', '|410^|n', '|510^|n'],
+    'Desert/Badlands' : ['|110°|n', '|210°|n', '|310°|n', '|410°|n', '|510°|n'],
+    'Taiga' : ['|155¶|n', '|255¶|n', '|355¶|n', '|455¶|n', '|555¶|n'],
+    'Tundra' : ['|155≡|n', '|255≡|n', '|355≡|n', '|455≡|n', '|555≡|n'],
+    'Swamp' : ['|040§|n', '|140§|n', '|240§|n', '|340§|n', '|440§|n'],
+    'Savannah' : ['|120░|n', '|220░|n', '|320░|n', '|420░|n', '|520░|n'],
+    'Shore' : ['|025▄|n', '|024▄|n', '|023▄|n', '|022▄|n', '|021▄|n',],
+    'Water' : ['|001█|n', '|002█|n', '|003█|n', '|004█|n', '|005█|n',],
+    'Fields' : ['|041▒|n', '|141▒|n', '|241▒|n', '|341▒|n', '|441▒|n',],
+    'City' : ['|155©|n', '|255©|n', '|355©|n', '|455©|n', '|555©|n']
+}
+
+
 class RoomSculptingMenu(BuildingMenu):
 
     """
@@ -33,7 +57,10 @@ class RoomSculptingMenu(BuildingMenu):
             text=text_info, on_nomatch=nomatch_info)
         self.add_choice("|=zTraits|n", "5", glance=glance_traits,
             text=text_traits, on_nomatch=nomatch_traits)
-        self.add_choice("|=zUpdate the Room to Current Spec|n", "6",
+        self.add_choice("|=zChoose Map Symbol (from a list)|n", "6",
+            glance="\n  {obj.db.map_symbol}",
+            text=text_map_symbol, on_nomatch=nomatch_map_symbol)
+        self.add_choice("|=zUpdate the Room to Current Spec|n", "7",
             glance=glance_update, on_enter=update_on_enter)
 
 
@@ -121,6 +148,7 @@ def text_info(caller,room):
         text += "\n This example will set the Non-Combat boolean to True"
     else:
         text += "\n\n |gNo room attributes have been defined.|n"
+    text += "\n  Type |y@|n to return to the main menu."
     return text
 
 
@@ -137,6 +165,32 @@ def text_traits(caller, room):
     text += "\n\n  Example: 3. 1 will change the X Coordinate to 1"
     text += "\n  Type |y@|n to return to the main menu."
     return text
+
+
+def text_map_symbol(caller, room):
+    """ Show the Map Symbol Options """
+    text = "-" * 79
+    text += "\n\nPossible Map Symbols:"
+    for biome, map_symbols in MAP_SYMBOLS.items():
+        text += f"\n  |y{biome}|n : {str(map_symbols)}"
+    text += "\n\n  |YNote: The biome should generally match the map symbol"
+    text += "\n  The symbols are arranged in order by how they would appear"
+    text += "\n  on the map if the room was lower or higher in elevation in"
+    text += "\n  relation to the map viewer's location."
+    text += "\n  |yType in <biome name> to select a symbol set Ex: Jungle"
+    text += "\n  Type |y@|n to return to the main menu."
+    return text
+
+
+def nomatch_map_symbol(menu, caller, room, string):
+    """
+    The user types in something for the map symbol
+    """
+    if len(string) > 2:
+        caller.msg(f"You typed in {string}. Checking against dictionary of map symbols.")
+        if string in MAP_SYMBOLS.keys():
+            room.db.map_symbol = MAP_SYMBOLS[string]
+            caller.msg(f"Map Symbol set to: {MAP_SYMBOLS[string]}")
 
 
 def nomatch_traits(menu, caller, room, string):

@@ -99,7 +99,7 @@ class Room(DefaultRoom):
         self.db.tracks = {}
 
         # add the overhead map symbol we want to use
-        self.db.map_symbol = '░'
+        self.db.map_symbol = ['|043¡|n', '|143¡|n', '|243¡|n', '|343¡|n', '|443¡|n']
 
         # add biome info. Biome types should be expressed in a number between 0
         # and 1. The total set of biomes added should add up to 1. The default
@@ -115,13 +115,6 @@ class Room(DefaultRoom):
 
     def return_appearance(self, looker):
         """ Returns custom appearance for the room, including overhead map. """
-        log_file("Starting Map creation", filename='map_debug.log')
-        #string = "%s\n" % Map(looker).show_map()
-        # Add all the normal stuff like room description,
-        # contents, exits etc.
-        log_file("Starting return map appearance", filename='map_debug.log')
-        # string += "\n" + super().return_appearance(looker)
-
         # Putting room description and map in a table format
         coord_string = f" Map Coordinates ---> X: {self.traits.xcord.current}, Y: {self.traits.ycord.current}"
         map = str(Map(looker).show_map())

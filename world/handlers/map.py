@@ -87,13 +87,10 @@ class Map(object):
 
         # we actually have to store the grid into a variable
         self.grid = self.create_grid()
-        log_file(f"{type(self.grid)}", filename='map_debug.log')
-        log_file(f"{self.grid}", filename='map_debug.log')
         self.draw_room_on_map(caller.location,
                              ((min(max_width, max_length) -1 ) / 2))
 
     def update_pos(self, room, exit_name):
-        log_file("Starting update_pos func", filename='map_debug.log')
         # this ensures the pointer variables always
         # stays up to date to where the worm is currently at.
         self.curX, self.curY = \
@@ -119,7 +116,6 @@ class Map(object):
             self.curX += 2
 
     def draw_room_on_map(self, room, max_distance):
-        log_file("Starting draw_room_on_map func", filename='map_debug.log')
         self.draw(room)
 
         if max_distance == 0:
@@ -139,7 +135,6 @@ class Map(object):
 
 
     def draw(self, room):
-        log_file("Starting draw func", filename='map_debug.log')
         # draw initial caller location on map first!
         if room == self.caller.location:
             self.start_loc_on_grid()
@@ -151,13 +146,36 @@ class Map(object):
             if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
                 if room.db.map_symbol:
                     log_file(f"Draw... Checking X: {self.curX}, Y: {self.curY}", filename='map_debug.log')
-                    self.grid[self.curX][self.curY] = room.db.map_symbol
+                    if len(room.db.map_symbol) == 1:
+                        self.grid[self.curX][self.curY] = room.db.map_symbol
+                    else:
+                        self.grid[self.curX][self.curY] = room.db.map_symbol[self.get_elev_index(room)]
                 else:
                     self.grid[self.curX][self.curY] = SYMBOLS[room.db.sector_type]
 
 
+    def get_elev_index(self, room):
+        """
+        Returns an elevation index for the room in relation to the character's
+        current location. If the room is lower in elevation than the character's
+        current location, a map symbol lower in the index will be chosen. This
+        will have the effect of showing a color gradient on the map with
+        elevations relative to the observer.
+        """
+        elevation_diff = room.traits.elev.current -self.caller_location.traits.elev.current
+        if elevation_diff < -125:
+            return 0
+        elif -125 <= elevation_diff < -25:
+            return 1
+        elif -25 <= elevation_diff <= 25:
+            return 2
+        elif 25 <= elevation_diff < 125:
+            return 3
+        elif elevation_diff > 125:
+            return 4
+
+
     def draw_exit(self, type, ExitX, ExitY):
-        log_file("Starting draw exit func", filename='map_debug.log')
         if 0 < ExitX < self.max_width and 0 < ExitY < self.max_length:
             # draw in the exits
             if type == 'vertical':
@@ -169,16 +187,13 @@ class Map(object):
 
 
     def median(self, num):
-        log_file("Starting median func", filename='map_debug.log')
         list_of_slots = sorted(range(0, num))
         return median(list_of_slots)
 
 
     def start_loc_on_grid(self):
-        log_file("Starting start_loc_on_grid func", filename='map_debug.log')
         x = self.median(self.max_width)
         y = self.median(self.max_length)
-        log_file(f"Median X: {x} Median Y: {y}", filename='map_debug.log')
         # x and y are floats by default, can't index lists with float types
         x, y = int(x), int(y)
 
@@ -190,14 +205,12 @@ class Map(object):
 
 
     def has_drawn(self, room):
-        log_file("Starting has_drawn func", filename='map_debug.log')
         return True if room in self.worm_has_mapped.keys() else False
 
 
     def create_grid(self):
         # pull in base map grid and split it so the individual positions
         # can be called by index number
-        log_file("Starting create_grid func", filename='map_debug.log')
         board = BASE_MAP_GRID.split('\n')
         index = 0
         for line in board:
@@ -210,7 +223,6 @@ class Map(object):
 
     def show_map(self):
         map_string = ""
-        log_file("Starting show_map func", filename='map_debug.log')
         for row in self.grid:
             map_string += " ".join(row)
             map_string += "\n"
