@@ -66,7 +66,6 @@ class Character(DefaultCharacter):
         """TraitHandler that manages room status effects."""
         return TraitHandler(self, db_attribute='status_effects')
 
-
     @lazy_property
     def equipment(self):
         """Handler for equipped items. We may need to move this to the

@@ -82,6 +82,7 @@ class Map(object):
         self.max_width = max_width
         self.max_length = max_length
         self.worm_has_mapped = {}
+        self.worm_has_mapped_room_ids = []
         self.curX = None
         self.curY = None
 
@@ -89,6 +90,7 @@ class Map(object):
         self.grid = self.create_grid()
         self.draw_room_on_map(caller.location,
                              ((min(max_width, max_length) -1 ) / 2))
+        self.caller.ndb.nearby_rooms = self.worm_has_mapped_room_ids
 
     def update_pos(self, room, exit_name):
         # this ensures the pointer variables always
@@ -99,20 +101,12 @@ class Map(object):
         # now we have to actually move the pointer
         # variables depending on which 'exit' it found
         if exit_name == 'east':
-            if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
-                self.draw_exit('horizontal', self.curX, (self.curY + 1) )
             self.curY += 2
         elif exit_name == 'west':
-            if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
-                self.draw_exit('horizontal', self.curX, (self.curY - 1) )
             self.curY -= 2
         elif exit_name == 'north':
-            if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
-                self.draw_exit('vertical', (self.curX - 1), self.curY)
             self.curX -= 2
         elif exit_name == 'south':
-            if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
-                self.draw_exit('vertical', (self.curX + 1), self.curY)
             self.curX += 2
 
     def draw_room_on_map(self, room, max_distance):
@@ -139,13 +133,29 @@ class Map(object):
         if room == self.caller.location:
             self.start_loc_on_grid()
             self.worm_has_mapped[room] = [self.curX, self.curY]
+            self.worm_has_mapped_room_ids.append(self.caller.location.id)
         else:
             # map all other rooms
             self.worm_has_mapped[room] = [self.curX, self.curY]
             # this will use the sector_type Attribute or None if not set.
             if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                for exit in room.exits:
+                    if exit.name == 'east':
+                        if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                            self.draw_exit('horizontal', self.curX, (self.curY + 1) )
+                    elif exit.name == 'west':
+                        if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                            self.draw_exit('horizontal', self.curX, (self.curY - 1) )
+                    elif exit.name == 'north':
+                        if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                            self.draw_exit('vertical', (self.curX - 1), self.curY)
+                    elif exit.name == 'south':
+                        if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                            self.draw_exit('vertical', (self.curX + 1), self.curY)
                 if room.db.map_symbol:
                     log_file(f"Draw... Checking X: {self.curX}, Y: {self.curY}", filename='map_debug.log')
+                    self.worm_has_mapped_room_ids.append(room.id)
+
                     if len(room.db.map_symbol) == 1:
                         self.grid[self.curX][self.curY] = room.db.map_symbol
                     else:

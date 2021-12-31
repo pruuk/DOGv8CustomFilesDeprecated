@@ -4,6 +4,7 @@ Menus for editing room objects.
 from evennia.contrib.building_menu import BuildingMenu
 from evennia.utils import lazy_property
 from world.handlers.traits import TraitHandler
+from evennia.utils.logger import log_file
 
 MAP_SYMBOLS = {
     'Crossroads' : ['|155╬|n','|255╬|n','|355╬|n','|455╬|n','|555╬|n'],
@@ -13,6 +14,10 @@ MAP_SYMBOLS = {
     'SW Road' : ['|155╝|n', '|255╝|n', '|355╝|n', '|455╝|n', '|555╝|n'],
     'NE Road' : ['|155╔|n', '|255╔|n', '|355╔|n', '|455╔|n', '|555╔|n'],
     'SE Road' : ['|155╚|n', '|255╚|n', '|355╚|n', '|455╚|n', '|555╚|n'],
+    'WT Road' : ['|155╣|n', '|255╣|n', '|355╣|n', '|455╣|n', '|555╣|n'],
+    'ET Road' : ['|155╠|n', '|255╠|n', '|355╠|n', '|455╠|n', '|555╠|n'],
+    'NT Road' : ['|155╩|n', '|255╩|n', '|355╩|n', '|455╩|n', '|555╩|n'],
+    'ST Road' : ['|155╦|n', '|255╦|n', '|355╦|n', '|455╦|n', '|555╦|n'],
     'Plains' : ['|155■|n', '|255■|n', '|355■|n', '|455■|n', '|555■|n'],
     'Forest' : ['|043¡|n', '|143¡|n', '|243¡|n', '|343¡|n', '|443¡|n'],
     'Jungle' : ['|043▓|n', '|143▓|n', '|243▓|n', '|343▓|n', '|443▓|n'],
@@ -41,6 +46,7 @@ class RoomSculptingMenu(BuildingMenu):
         return TraitHandler(self)
 
     def init(self, room):
+        self.room = room
         self.add_choice("|=zTitle|n", key="1", attr="key", glance="|y{obj.key}|n", text="""
                 -------------------------------------------------------------------------------
                 Editing the title of {{obj.key}}(#{{obj.id}})
@@ -65,16 +71,32 @@ class RoomSculptingMenu(BuildingMenu):
 
 
 # Menu functions
-def glance_exits(room):
+def glance_exits(room, caller):
     """Show the room exits."""
     if room.exits:
         glance = ""
         for exit in room.exits:
             glance += "\n  |y{exit}|n".format(exit=exit.key)
+    else:
+        glance += "\n  |gNo exit yet|n"
+    # get adjcent rooms
+    adjacent_rooms = find_adjacent_room_ids(room, caller)
+    missing_exits_to = []
+    glance += "\n\n  |yAdjacent Rooms (by Coordinates):|n"
+    if adjacent_rooms:
+        for room_id, cardinal in adjacent_rooms:
+            glance += f"\n    |yRoom Id: |Y{room_id} |yDirection: |Y{cardinal}"
+        missing_exits_to = check_adjacent_rooms_for_missing_exits(room, adjacent_rooms)
+    else:
+        glance += "\n    |YNone|n"
+    glance += "\n  |yList of potentially missing exits:|n"
+    if missing_exits_to:
+        for room_id, cardinal in missing_exits_to:
+            glance += f"\n    |yRoom Id: |Y{room_id} |yDirection: |Y{cardinal}"
+    else:
+        glance += "\n    |YNone|n"
 
-        return glance
-
-    return "\n  |gNo exit yet|n"
+    return glance
 
 
 def glance_info_attrs(room):
@@ -116,7 +138,8 @@ def text_exits(caller, room):
     """Show the room exits in the choice itself."""
     text = "-" * 79
     text += "\n\nRoom exits:"
-    text += "\n Use tunnel or dig commands (outside these menus) to create new rooms and exits."
+    text += "\n Use tunnel or dig commands (outside these menus) to create new rooms."
+    text += "\n To open an exit to "
     text += "\n Use @ to return to the previous menu."
     text += "\n To edit a specific exit use something like '@3 east'"
     text += "\n\nExisting exits:"
@@ -130,6 +153,26 @@ def text_exits(caller, room):
                 text += " toward {destination}".format(destination=exit.get_display_name(caller))
     else:
         text += "\n\n |gNo exit has yet been defined.|n"
+
+    # get adjcent rooms
+    adjacent_rooms = find_adjacent_room_ids(room, caller)
+    missing_exits_to = []
+    text += "\n\n  |yAdjacent Rooms (by Coordinates):|n"
+    if adjacent_rooms:
+        for room_id, cardinal in adjacent_rooms:
+            text += f"\n    |yRoom Id: |Y{room_id} |yDirection: |Y{cardinal}"
+        missing_exits_to = check_adjacent_rooms_for_missing_exits(room, adjacent_rooms)
+    else:
+        text += "\n    |YNone|n"
+    text += "\n  |yList of potentially missing exits:|n"
+    if missing_exits_to:
+        for room_id, cardinal in missing_exits_to:
+            text += f"\n    |yRoom Id: |Y{room_id} |yDirection: |Y{cardinal}"
+    else:
+        text += "\n    |YNone|n"
+
+    text += "\n  To open a new exit to and from an adjacent room, type: "
+    text += "\n     |yconnect_to_<room id number>"
 
     return text
 
@@ -245,10 +288,27 @@ def nomatch_exits(menu, caller, room, string):
     """
     The user typed something in the list of exits.  Maybe an exit name?
     """
-    string = string[3:]
-    exit = caller.search(string, candidates=room.exits)
-    if exit is None:
+    # check first if we're trying to open exits to a new adjacent room
+    log_file(f"Before 11 is: {string[:11]}", filename='room_build_debug.log')
+    if string[:11] == 'connect_to_':
+        cmd_string = string[11:]
+        # get adjcent rooms
+        adjacent_rooms = find_adjacent_room_ids(room, caller)
+        missing_exits_to = []
+        if adjacent_rooms:
+            missing_exits_to = check_adjacent_rooms_for_missing_exits(room, adjacent_rooms)
+            if missing_exits_to:
+                for room_id, cardinal in missing_exits_to:
+                    if str(room_id) == cmd_string:
+                        direction_string = get_return_dir_string(cardinal)
+                        caller.execute_cmd(f"open {direction_string} = #{room_id}")
+                        caller.msg(f"Opening a new exit to: #{room_id}")
         return
+    else:
+        string = string[3:]
+        exit = caller.search(string, candidates=room.exits)
+        if exit is None:
+            return
 
     # Open a sub-menu, using nested keys
     caller.msg("Editing: {}".format(exit.key))
@@ -263,6 +323,77 @@ def update_on_enter(caller):
     caller.execute_cmd("update here")
     return
 
+
+def find_adjacent_room_ids(room, caller):
+    """
+    This func uses the temp variable nearby_rooms on the caller and compares
+    the X,Y Coordinates of the rooms in the nearby room list to find rooms
+    that are adjecent. This will be used with other functions to create linked
+    exits between adjacent rooms if the builder chooses to do so.
+    """
+    log_file(f"Checking for adjacent rooms for: {room.id}", filename='room_build_debug.log')
+    if room.ndb.nearby_rooms:
+        adjacent_rooms = []
+        for room_id in room.ndb.nearby_rooms:
+            search_string = f"#{room_id}"
+            adj_room_candidate = caller.search(search_string)
+            if adj_room_candidate:
+                if adj_room_candidate.traits.xcord.current == room.traits.xcord.current:
+                    # matching X coordinate, check to north and south
+                    if adj_room_candidate.traits.ycord.current == (room.traits.xcord.current + 1):
+                        # X matches, Y is 1 room north of room we're editing
+                        adjacent_rooms.append([adj_room_candidate.id, 'north'])
+                    if adj_room_candidate.traits.ycord.current == (room.traits.xcord.current - 1):
+                        # X matches, Y is 1 room south of room we're editing
+                        adjacent_rooms.append([adj_room_candidate.id, 'south'])
+                elif adj_room_candidate.traits.ycord.current == room.traits.ycord.current:
+                    # matching Y coordinate, check to west and east
+                    if adj_room_candidate.traits.xcord.current == (room.traits.xcord.current + 1):
+                        # Y matches, X is 1 room east of room we're editing
+                        adjacent_rooms.append([adj_room_candidate.id, 'east'])
+                    if adj_room_candidate.traits.xcord.current == (room.traits.xcord.current - 1):
+                        # Y matches, X is 1 room west of room we're editing
+                        adjacent_rooms.append([adj_room_candidate.id, 'west'])
+        log_file(f"List of adjacent rooms: {adjacent_rooms}", filename='room_build_debug.log' )
+        return adjacent_rooms
+    else:
+        return None
+
+
+def check_adjacent_rooms_for_missing_exits(room, adjacent_rooms):
+    """
+    Takes in the adjacent rooms list produced by the func above and checks to
+    see if we have missing exit candidates. Returns those candidates.
+    """
+    # get exits
+    exit_keys = []
+    missing_exits_to = []
+    if room.exits:
+        log_file(f"Checking Exits: {room.exits}", filename='room_build_debug.log' )
+        for exit in room.exits:
+            exit_keys.append(exit.key)
+            log_file(f"Exit Keys: {exit_keys}", filename='room_build_debug.log')
+    for room_id, cardinal in adjacent_rooms:
+        log_file(f"Checking if {room_id} that is {cardinal} of this room has an exit", filename='room_build_debug.log')
+        if cardinal not in exit_keys:
+            # we're missing an exit to the adjacent room
+            missing_exits_to.append([room_id, cardinal])
+    return missing_exits_to
+
+
+def get_return_dir_string(cardinal):
+    """ Gets the aliases for a cardinal direction and the return direction."""
+    if cardinal in ['north', 'south', 'east', 'west']:
+        if cardinal == 'north':
+            return 'north;n,south;s'
+        if cardinal == 'south':
+            return 'south;s,north;n'
+        if cardinal == 'east':
+            return 'east;e,west;w'
+        if cardinal == 'west':
+            return 'west;w,east;e'
+    else:
+        return None
 
 
 class ExitBuildingMenu(BuildingMenu):

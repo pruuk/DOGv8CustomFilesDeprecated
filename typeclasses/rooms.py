@@ -123,5 +123,6 @@ class Room(DefaultRoom):
             table=[[desc], [Map(looker).show_map()]], border="cells")
         table.reformat_column(0, width=60, align="l", valign="c")
         table.reformat_column(1, width=50, align="c", valign="c")
+        self.ndb.nearby_rooms = looker.ndb.nearby_rooms
 
         return table
