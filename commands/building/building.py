@@ -156,6 +156,6 @@ class CoordinateWorm(Object):
         elif exit_name == 'west':
             self.curX -= 1
         elif exit_name == 'north':
-            self.curY -= 1
-        elif exit_name == 'south':
             self.curY += 1
+        elif exit_name == 'south':
+            self.curY -= 1
