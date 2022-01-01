@@ -119,10 +119,11 @@ class Room(DefaultRoom):
         coord_string = f" Map Coordinates ---> X: {self.traits.xcord.current}, Y: {self.traits.ycord.current}"
         map = str(Map(looker).show_map())
         desc = str(super().return_appearance(looker))
-        table = evtable.EvTable("", coord_string,
-            table=[[desc], [Map(looker).show_map()]], border="cells")
-        table.reformat_column(0, width=50, align="l", valign="c")
-        table.reformat_column(1, width=44, align="l", valign="c")
+        table = evtable.EvTable(self.name, coord_string,
+            table=[], border="tablecols")
+        table.reformat_column(0, width=50, align="l", valign="b", evenwidth=True)
+        table.reformat_column(1, width=44, align="l", valign="c", evenwidth=True)
+        table.add_row(desc, Map(looker).show_map())
         self.ndb.nearby_rooms = looker.ndb.nearby_rooms
 
         return table
