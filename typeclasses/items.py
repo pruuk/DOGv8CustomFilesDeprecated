@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Generic item classes and their base functions.
 """

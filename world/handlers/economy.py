@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Economy module. Blatantly copied from Ainneve mud's code:
 https://github.com/evennia/ainneve/blob/master/world/economy.py

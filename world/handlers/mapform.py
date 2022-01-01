@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 This file contains the form that will be used to show the contents of rooms
 plus a mini-map in a side by side format.

@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Menus for editing room objects.
 """
@@ -79,8 +80,12 @@ def glance_exits(room, caller):
             glance += "\n  |y{exit}|n".format(exit=exit.key)
     else:
         glance += "\n  |gNo exit yet|n"
-    # get adjcent rooms
-    adjacent_rooms = find_adjacent_room_ids(room, caller)
+    # get adjacent rooms if this isn't the origin room (#2) and coords are not set to 0,0
+    if not (room.traits.xcord.current == 0 and room.traits.ycord.current == 0) \
+        or room.id == 2:
+            adjacent_rooms = find_adjacent_room_ids(room, caller)
+    else:
+        adjacent_rooms = None
     missing_exits_to = []
     glance += "\n\n  |yAdjacent Rooms (by Coordinates):|n"
     if adjacent_rooms:
@@ -340,18 +345,18 @@ def find_adjacent_room_ids(room, caller):
             if adj_room_candidate:
                 if adj_room_candidate.traits.xcord.current == room.traits.xcord.current:
                     # matching X coordinate, check to north and south
-                    if adj_room_candidate.traits.ycord.current == (room.traits.xcord.current - 1):
+                    if int(adj_room_candidate.traits.ycord.current) == int(room.traits.ycord.current) + 1:
                         # X matches, Y is 1 room north of room we're editing
                         adjacent_rooms.append([adj_room_candidate.id, 'north'])
-                    if adj_room_candidate.traits.ycord.current == (room.traits.xcord.current + 1):
+                    if int(adj_room_candidate.traits.ycord.current) == int(room.traits.ycord.current) - 1:
                         # X matches, Y is 1 room south of room we're editing
                         adjacent_rooms.append([adj_room_candidate.id, 'south'])
                 elif adj_room_candidate.traits.ycord.current == room.traits.ycord.current:
                     # matching Y coordinate, check to west and east
-                    if adj_room_candidate.traits.xcord.current == (room.traits.xcord.current + 1):
+                    if int(adj_room_candidate.traits.xcord.current) == int(room.traits.xcord.current) + 1:
                         # Y matches, X is 1 room east of room we're editing
                         adjacent_rooms.append([adj_room_candidate.id, 'east'])
-                    if adj_room_candidate.traits.xcord.current == (room.traits.xcord.current - 1):
+                    if int(adj_room_candidate.traits.xcord.current) == int(room.traits.xcord.current) - 1:
                         # Y matches, X is 1 room west of room we're editing
                         adjacent_rooms.append([adj_room_candidate.id, 'west'])
         log_file(f"List of adjacent rooms: {adjacent_rooms}", filename='room_build_debug.log' )
