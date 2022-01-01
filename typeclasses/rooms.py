@@ -121,8 +121,8 @@ class Room(DefaultRoom):
         desc = str(super().return_appearance(looker))
         table = evtable.EvTable("", coord_string,
             table=[[desc], [Map(looker).show_map()]], border="cells")
-        table.reformat_column(0, width=60, align="l", valign="c")
-        table.reformat_column(1, width=50, align="c", valign="c")
+        table.reformat_column(0, width=50, align="l", valign="c")
+        table.reformat_column(1, width=44, align="l", valign="c")
         self.ndb.nearby_rooms = looker.ndb.nearby_rooms
 
         return table
