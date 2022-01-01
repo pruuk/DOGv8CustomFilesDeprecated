@@ -10,6 +10,7 @@ from evennia import DefaultRoom
 from evennia.utils.logger import log_file
 from evennia.utils import lazy_property
 from world.handlers.traits import TraitHandler
+from world.handlers.biomes import apply_biomes
 import time
 from world.randomness_controller import distro_return_a_roll as roll
 from world.randomness_controller import distro_return_a_roll_sans_crits as rarsc
@@ -102,15 +103,8 @@ class Room(DefaultRoom):
         self.db.map_symbol = ['|043¡|n', '|143¡|n', '|243¡|n', '|343¡|n', '|443¡|n']
 
         # add biome info. Biome types should be expressed in a number between 0
-        # and 1. The total set of biomes added should add up to 1. The default
-        # room is a large area of dense forest with a trail running through it
-        self.biomes.add(key='dfor', name='Dense Forest', type='static', \
-                        base=0.95)
-        # For road and trail biome types, add a condition between 0 and 1. 1
-        # indicates a trail in perfect condition. Width is measured in meters
-        # and is an average
-        self.biomes.add(key='trail', name='Trail', type='static', base=0.05, \
-                        extra={'condition' : 1, 'width' : 1.5})
+        # and 1. The total set of biomes added should add up to 1.
+        apply_biomes(self)
 
 
     def return_appearance(self, looker):
@@ -119,11 +113,15 @@ class Room(DefaultRoom):
         coord_string = f" Map Coordinates ---> X: {self.traits.xcord.current}, Y: {self.traits.ycord.current}"
         map = str(Map(looker).show_map())
         desc = str(super().return_appearance(looker))
-        table = evtable.EvTable(self.name, coord_string,
+        table = evtable.EvTable(coord_string, self.name,
             table=[], border="tablecols")
-        table.reformat_column(0, width=50, align="l", valign="c", evenwidth=True)
-        table.reformat_column(1, width=44, align="c", valign="c", evenwidth=True)
-        table.add_row(desc, Map(looker).show_map())
+        table.reformat_column(0, width=46, align="l", valign="c", evenwidth=True)
+        table.reformat_column(1, width=54, align="c", valign="c", evenwidth=True)
+        table.add_row(Map(looker).show_map(), desc)
         self.ndb.nearby_rooms = looker.ndb.nearby_rooms
-
         return table
+
+    def reset_biomes(self):
+        """ Resets biomes on this room """
+        self.biomes.clear()
+        apply_biomes(self)
