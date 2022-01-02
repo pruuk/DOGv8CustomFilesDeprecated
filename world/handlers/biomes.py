@@ -272,6 +272,7 @@ _BIOME_DATA = {
     }
 }
 
+
 def apply_biomes(room):
     """
     Initializes a room with the full list of biomes.
@@ -279,7 +280,7 @@ def apply_biomes(room):
     """
     room.biomes.clear()
     for biome, data in _BIOME_DATA.items():
-        room.biomes.add(
+        room.biome.add(
             key=biome,
             type='static',
             base=data['biome_ratio'],

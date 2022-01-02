@@ -64,10 +64,12 @@ class RoomSculptingMenu(BuildingMenu):
             text=text_info, on_nomatch=nomatch_info)
         self.add_choice("|=zTraits|n", "5", glance=glance_traits,
             text=text_traits, on_nomatch=nomatch_traits)
-        self.add_choice("|=zChoose Map Symbol (from a list)|n", "6",
+        self.add_choice("|=zBiomes|n", "6", glance=glance_biomes,
+            text=text_biomes, on_nomatch=nomatch_biomes)
+        self.add_choice("|=zChoose Map Symbol (from a list)|n", "7",
             glance="\n  {obj.db.map_symbol}",
             text=text_map_symbol, on_nomatch=nomatch_map_symbol)
-        self.add_choice("|=zUpdate the Room to Current Spec|n", "7",
+        self.add_choice("|=zUpdate the Room to Current Spec|n", "8",
             glance=glance_update, on_enter=update_on_enter)
 
 
@@ -127,6 +129,17 @@ def glance_traits(room):
         glance += "No traits defined."
     return glance
 
+def glance_biomes(room):
+    """Show the room biomes"""
+    glance = ""
+    if room.biomes:
+        for biome, data in room.biomes.all_dict.items():
+            if data['base'] != 0:
+                glance += f"\n|y  {biome}|n: |y{data['base']}"
+    if len(glance) == 0:
+        glance += "|y  None|n"
+    return glance
+
 
 def glance_update(room):
     """ Show the glance warning text for updating """
@@ -137,6 +150,23 @@ def glance_update(room):
     glance += "\n  |YNOTE: Updating the room will execute the command and exit you from"
     glance += "\n  the sculpting menu.|n"
     return glance
+
+
+def text_biomes(room):
+    """Show the room biomes"""
+    text = "\n  |YBiomes:|n"
+    if room.biomes:
+        for biome, data in room.biomes.all_dict.items():
+            text += f"\n    |y{biome}|n: |y{data['base']}"
+    text += "\n\n  |yNOTE: The value for biomes is a number between 0 and 1"
+    text += "\n     Thus a value of 1 means the entire room is that biome."
+    text += "\n     Please ensure all your biome values add up to 1.|n"
+
+    text += "\n\n  |YTo change a biome value, enter <biome name> <value>"
+    text += "\n  For example, forest 0.4"
+    text += "\n  would make 40% of the room forest type."
+    text += "\n\n type @ to return to the previous menu."
+    return text
 
 
 def text_exits(caller, room):
@@ -228,6 +258,49 @@ def text_map_symbol(caller, room):
     text += "\n  |yType in <biome name> to select a symbol set Ex: Jungle"
     text += "\n  Type |y@|n to return to the main menu."
     return text
+
+
+def nomatch_biomes(menu, caller, room, string):
+    """
+    The user types something into the submenu for biomes
+    """
+    if len(string) > 2:
+        split_text = string.split()
+        if len(split_text) == 2:
+            biome_name = split_text[0]
+            biome_val = float(split_text[1])
+            caller.msg(f"Trying to set {biome_name} to {biome_val}")
+            if biome_name == 'road':
+                room.biomes.road.base = biome_val
+            elif biome_name == 'trail':
+                room.biomes.trail.base = biome_val
+            elif biome_name == 'plains':
+                room.biomes.plains.base = biome_val
+            elif biome_name == 'forest':
+                room.biomes.forest.base = biome_val
+            elif biome_name == 'jungle':
+                room.biomes.jungle.base = biome_val
+            elif biome_name == 'hills':
+                room.biomes.hills.base = biome_val
+            elif biome_name == 'badlands':
+                room.biomes.badlands.base = biome_val
+            elif biome_name == 'tiaga':
+                room.biomes.tiaga.base = biome_val
+            elif biome_name == 'tundra':
+                room.biomes.tundra.base = biome_val
+            elif biome_name == 'swamp':
+                room.biomes.swamp.base = biome_val
+            elif biome_name == 'savannah':
+                room.biomes.savannah.base = biome_val
+            elif biome_name == 'shore':
+                room.biomes.shore.base = biome_val
+            elif biome_name == 'water':
+                room.biomes.water.base = biome_val
+            elif biome_name == 'fields':
+                room.biomes.fields.base = biome_val
+            elif biome_name == 'city':
+                room.biomes.city.base = biome_val
+    return
 
 
 def nomatch_map_symbol(menu, caller, room, string):
