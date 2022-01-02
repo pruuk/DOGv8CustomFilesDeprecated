@@ -280,7 +280,7 @@ def apply_biomes(room):
     """
     room.biomes.clear()
     for biome, data in _BIOME_DATA.items():
-        room.biome.add(
+        room.biomes.add(
             key=biome,
             type='static',
             base=data['biome_ratio'],
