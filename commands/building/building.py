@@ -119,7 +119,8 @@ class CoordinateWorm(Object):
         """
         self.set_room_coordinates(room)
         for exit in room.exits:
-            if exit.name not in ("north", "east", "west", "south"):
+            if exit.name not in ("north", "east", "west", "south", "northeast", \
+                                 "northwest", "southeast", "southwest"):
                 # we only map in the cardinal directions. Mapping up/down would be
                 # an interesting learning project for someone who wanted to try it.
                 continue
@@ -160,4 +161,16 @@ class CoordinateWorm(Object):
         elif exit_name == 'north':
             self.curY += 1
         elif exit_name == 'south':
+            self.curY -= 1
+        elif exit_name == 'northeast':
+            self.curX += 1
+            self.curY += 1
+        elif exit_name == 'southeast':
+            self.curX += 1
+            self.curY -= 1
+        elif exit_name == 'northwest':
+            self.curX += 1
+            self.curY += 1
+        elif exit_name == 'southwest':
+            self.curX -= 1
             self.curY -= 1
