@@ -45,6 +45,7 @@ Categories by status type:
         - Polished
         - Dirty
         - Muddy
+        - Bloody/Gore
 
     - Impairing
         - High
@@ -68,6 +69,7 @@ Categories by status type:
     - Misc
         - Hasted
         - Fast Regen
+        - Lit (important for rooms and vision)
 
 """
 

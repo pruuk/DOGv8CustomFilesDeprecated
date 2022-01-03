@@ -125,3 +125,49 @@ class Room(DefaultRoom):
         """ Resets biomes on this room """
         self.biomes.clear()
         apply_biomes(self)
+
+
+class IndoorRoom(Room):
+    """
+    Subtype of room that is indoors
+    """
+    def at_object_creation(self):
+        "Called only at object creation and with update command."
+        super(Room, self).at_object_creation()
+        self.traits.size.base = 25 # standard of 25 meters square
+        self.traits.enc.base = 10000
+        self.traits.rot.base = 0
+        self.traits.elev.base = 0
+        self.traits.trackmax.base =  3
+        self.db.info['outdoor room'] = False
+        self.db.info['zone'] = None
+        self.db.map_symbol = ['|155:|n','|255:|n','|355:|n','|455:|n','|555:|n']
+
+
+class BuildingEntrance(IndoorRoom):
+    """
+    Special subtype of Indoor Room that is only created when a building is
+    created. This room will be in the inventory of the building and will be
+    connected to the room the outdoor building is inside of with an exit
+    named 'exit building'.
+    """
+    def at_object_creation(self):
+        "Called only at object creation and with update command."
+        super(IndoorRoom, self).at_object_creation()
+        self.traits.size.base = 25 # standard of 25 meters square
+        self.traits.enc.base = 10000
+        self.traits.rot.base = 0
+        self.traits.elev.base = 0
+        self.traits.trackmax.base =  3
+        self.db.info['outdoor room'] = False
+        self.db.info['zone'] = None
+        self.db.map_symbol = ['|155:|n','|255:|n','|355:|n','|455:|n','|555:|n']
+        self.key =f"Entry Room of {self.location.key}"
+        self.build_exit()
+
+    def build_exit(self):
+        """
+        Builds an exit to the outdoor room this building is located within.
+        """
+        pass
+        # TODO: Figure out how to implement this in the build menus

@@ -23,12 +23,23 @@ class Item(Object):
 
     @lazy_property
     def traits(self):
-        """TraitHandler that manages room traits."""
+        """TraitHandler that manages item traits."""
         return TraitHandler(self)
+
+    @lazy_property
+    def status_effects(self):
+        """TraitHandler that manages item status effects."""
+        return TraitHandler(self, db_attribute='status_effects')
+
+    @lazy_property
+    def physical_materials(self):
+        """TraitHandler that manages what materials an item is composed of."""
+        return TraitHandler(self, db_attribute='material')
 
     def at_object_creation(self):
         "Only called at creation and forced update"
         super(Item, self).at_object_creation()
+        self.traits.clear()
         self.locks.add(";".join(("puppet:perm(Builder)",
                                  "equip:false()",
                                  "get:all()"
@@ -39,6 +50,24 @@ class Item(Object):
                         base=float(self.mass))
         self.traits.add(key="hp", name="Health Points", type="gauge", \
                         base=10, extra={'learn' : 0})
+        # Add a measure of quality of the item from 0.01 (basically trash) to 1
+        # (superbly master crafted item)
+        self.traits.add(key="qual", name="Quality", type="static", \
+                        base=0.25, extra={'learn' : 0})
+        # Add a trait that measures the condition of the item. This can and will
+        # degrade over time for most items. Scale is from 0 (broken) to 1 (new)
+        self.traits.add(key="cond", name="Condition", type="static", \
+                        base=1, extra={'learn' : 0})
+        # carrying capacity of the item. Useful for chairs, quivers, or any
+        # item that might have another item in its inventory
+        self.traits.add(key="cap", name="Container Capacity", type="static", \
+                        base=10, extra={'learn' : 0})
+        # attribute that stores which items in this item's inventory are 'parts'
+        # or components of this item. Ex. a chair might have legs, seat, and
+        # a back. Or it may just be a single object. This is entirely up to the
+        # builder
+        self.db.parts = []
+
 
     def at_before_move(self, getter):
         """
@@ -74,6 +103,36 @@ class Item(Object):
     def at_drop(self, dropper):
         "Called just after dropper drops this object"
         dropper.calculate_encumberance()
+
+    def at_break(self):
+        """ Item has been broken. Replace it with broken bits of """
+        self.location.msg_contents(f"{self.key} has broken!")
+        broken_junk = create_object('typeclasses.items.Trash',
+                             key=f'Broken pieces of {self.key}',
+                             location=self.location,
+                             parent_materials=self.material.all_dict)
+        self.delete()
+
+    def change_condition(self, amount):
+        """ Called when condition of the item is degraded or repaired """
+        self.traits.cond.mod + amount
+        if self.traits.cond.current <= 0:
+            self.at_break()
+
+
+class Trash(Item):
+    """
+    Any item that has been completely broken. Worthless, other than it can be
+    canibalized for parts (maybe).
+    """
+    value = 0
+
+    def at_object_creation(self, parent_materials):
+        "Only called at creation and forced update"
+        super(Item, self).at_object_creation()
+        for material, data in parent_materials.items():
+            self.materials.add(key=data[key])
+
 
 class Bundable(Item):
     """
@@ -139,3 +198,165 @@ class Equippable(Item):
         if self in dropper.equip:
             dropper.equip.remove(self)
             self.at_remove(dropper)
+
+
+class Furnishing(Item):
+    """
+    Typeclass for furnishing items.
+    Some furnishings can be sat on, or serve as a bed (or both).
+    When a player or NPC is using a furnishing in this fashion, they are
+    in the furnishing's inventory.
+
+    NOTE: It is important to change the carrying capacity and sit/bed
+    values as appropriate after a furnishing has been created if you want
+    characters and NPCs to sit in them
+
+    """
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super(Item, self).at_object_creation()
+        # Can this be sat upon? Can it be used as a bed?
+        self.db.sit = False
+        self.db.bed = False
+        self.db.hang = False # can this hang on a wall? ex: painting
+        # trait for how comfortable this furnishing is to sit or lay on. The
+        # higher this value, the more a character or NPC recovers. Scale is from
+        # 0 (no comfort) to 1 (most comfortable in the world)
+        self.traits.add(key="comfort", name="Comfort", type="static", \
+                        base=0.5, extra={'learn' : 0})
+        # traits for furnishings that provide light. Will not provide light by
+        # default
+        self.traits.add(key="light", name='Light', type="static", \
+                        base = 0, extra={'fuel' : None})
+        self.db.lit = False
+
+    def at_sit(self, sitter):
+        """ Called when someone tries to sit on this furnishing."""
+        if self.db.sit:
+            if sitter.traits.mass.current > self.traits.cap.current:
+                # The sitter is too heavy, will break the item
+                sitter.msg("You're too heavy! You've broken {self.key}!")
+                self.at_break()
+        else:
+            sitter.msg(f"You try to sit on {self.key}, but can't figure out how.")
+
+    def at_lay(self, layer):
+        """ Called when someone tries to lay on this furnishing."""
+        if self.db.bed:
+            if sitter.traits.mass.current > self.traits.cap.current:
+                # The layer is too heavy, will break the item
+                sitter.msg("You're too heavy! You've broken {self.key}!")
+                self.at_break()
+        else:
+            sitter.msg(f"You try to lay on {self.key}, but can't figure out how.")
+
+    def at_hang(self, hanger):
+        """ Called when someone wants to hang a funsihing on a wall"""
+        if self.db.hang:
+            self.location.msg_contents(f"{hanger.name} hangs {self.key} on the wall.")
+            self.move_to(hanger.location)
+
+
+class LightSource(Equippable):
+    """
+    Typeclass for Items that provide light AND can be equipped.
+    Some furnishings also provide light
+    """
+    slots = ['hand']
+    multi_slot = False
+
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super(Equippable, self).at_object_creation()
+        self.locks.add("puppet:false();equip:true()")
+        self.db.slots = self.slots
+        self.db.multi_slot = self.multi_slot
+        self.db.used_by = None
+        # scale for light is how large of an area will be lit (in square meters)
+        self.traits.add(key="light", name='Light', type="static", \
+                        base = 100, extra={'fuel' : 'oil'})
+        # default fuel type is Oil. Other types include: wood, fat, gas, battery
+        # and self (think of a torch)
+        self.db.lit = False
+
+    def at_light(self, lighter=None):
+        """ Called when the object is lit """
+        if lighter:
+            lighter.location.msg_contents(f"{lighter.nanme} lights {self.key}.")
+        else:
+            self.location.msg_contents(f"{self.key} is lit.")
+        self.db.lit = True
+
+    def at_darken(self, darkener=None):
+        """ Called when an item is extinguished or runs out of fuel """
+        if darkener:
+            darkener.location.msg_contents(f"{lighter.nanme} extinguishes {self.key}.")
+        else:
+            self.location.msg_contents(f"{self.key} is extinguished.")
+        self.db.lit = False
+
+
+class RoadsAndTrail(Item):
+    """
+    Typeclass for road and trail objects. These can be repaired and damaged by
+    human activity. They can also be damaged by events like weather (via status
+    effects).
+    """
+
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super(Item, self).at_object_creation()
+        self.traits.mass.base=100000
+        self.traits.hp.base=10000
+
+
+class Component(Item):
+    """
+    Typeclass for items that can be gathered and then used as raw materials for
+    crafting useful and/or equippable objects.
+    """
+
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super(Item, self).at_object_creation()
+
+    def at_craft(self, crafter):
+        """ These items are consumed as part of crafting. """
+        crafter.msg(f"{self.key} is consumed during crafting.")
+        self.delete()
+
+class Consumnable(Item):
+    """ Subtype of item that is consumed. May have a number of charges. """
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super(Item, self).at_object_creation()
+        self.traits.add(key="charge", name="Charges", type="gauge", \
+                        base=10, extra={'learn' : 0})
+
+    def at_consume(self, charges_to_consume):
+        """ Consume one or more charges """
+        self.traits.charge.mod - charges_to_consume
+        if self.traits.charge.current <= 0:
+            self.at_consumed()
+
+    def at_consumed(self):
+        """ Consumable item is depleted """
+        self.location.msg_contents(f"{self.key} is consumed.")
+        self.delete()
+
+
+class Building(Item):
+    """
+    Subtype of item that is a building that contains one or more rooms.
+    Since the rooms will be indoor rooms, they will have a self-consistent
+    set of map coordinates.
+
+    When a building is created, a single room will be spawned that will be
+    located in the room's inventory. That building itself will be in the
+    inventory of a larger outside type room.
+
+    It is REQUIRED that room direction cardinality be consistent within a
+    building between the rooms in that building. Use the trait 'Elevation' to
+    handle floors/levels inside the building; The entrance should generally
+    default to 0 elevation.
+    """

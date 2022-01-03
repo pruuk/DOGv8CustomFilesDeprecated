@@ -101,6 +101,9 @@ class Map(object):
 
         # now we have to actually move the pointer
         # variables depending on which 'exit' it found
+        ## NOTE: The X and Y are the opposite of how you would think of the map
+        ## coordinates because we're referencing indexes within a list, not an
+        ## X Y on the map
         if exit_name == 'east':
             self.curY += 2
         elif exit_name == 'west':
@@ -109,6 +112,18 @@ class Map(object):
             self.curX -= 2
         elif exit_name == 'south':
             self.curX += 2
+        elif exit_name == 'northeast':
+            self.curX -= 2
+            self.curY += 2
+        elif exit_name == 'southeast':
+            self.curX += 2
+            self.curY += 2
+        elif exit_name == 'northwest':
+            self.curX -= 2
+            self.curY -= 2
+        elif exit_name == 'southwest':
+            self.curX += 2
+            self.curY -= 2
 
     def draw_room_on_map(self, room, max_distance):
         self.draw(room)
@@ -117,7 +132,8 @@ class Map(object):
             return
 
         for exit in room.exits:
-            if exit.name not in ("north", "east", "west", "south"):
+            if exit.name not in ("north", "east", "west", "south", "northeast", \
+                                 "northwest", "southeast", "southwest"):
                 # we only map in the cardinal directions. Mapping up/down would be
                 # an interesting learning project for someone who wanted to try it.
                 continue
@@ -143,16 +159,29 @@ class Map(object):
                 for exit in room.exits:
                     if exit.name == 'east':
                         if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
-                            self.draw_exit('horizontal', self.curX, (self.curY + 1) )
+                            self.draw_exit('horizontal', self.curX, self.curY + 1)
                     elif exit.name == 'west':
                         if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
-                            self.draw_exit('horizontal', self.curX, (self.curY - 1) )
+                            self.draw_exit('horizontal', self.curX, self.curY - 1)
                     elif exit.name == 'north':
                         if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
-                            self.draw_exit('vertical', (self.curX - 1), self.curY)
+                            self.draw_exit('vertical', self.curX - 1, self.curY)
                     elif exit.name == 'south':
                         if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
-                            self.draw_exit('vertical', (self.curX + 1), self.curY)
+                            self.draw_exit('vertical', self.curX + 1, self.curY)
+                    elif exit.name == "northeast":
+                        if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                            self.draw_exit('nesw', (self.curX - 1), (self.curY + 1))
+                    elif exit.name == "southwest":
+                        if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                            self.draw_exit('nesw', (self.curX + 1), (self.curY - 1))
+                    elif exit.name == "northwest":
+                        if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                            self.draw_exit('nwse', (self.curX - 1), (self.curY - 1))
+                    elif exit.name == "southeast":
+                        if [self.curX, self.curY] in MAPPABLE_ROOM_COORDS:
+                            self.draw_exit('nwse', (self.curX + 1), (self.curY + 1))
+
                 if room.db.map_symbol:
                     log_file(f"Draw... Checking X: {self.curX}, Y: {self.curY}", filename='map_debug.log')
                     self.worm_has_mapped_room_ids.append(room.id)
@@ -162,6 +191,16 @@ class Map(object):
                     else:
                         self.grid[self.curX][self.curY] = room.db.map_symbol[self.get_elev_index(room)]
                 else:
+                    if not room.db.info['outdoor room']:
+                        # this is an indoor room. Check to see if we have exits up or down
+                        if 'up' in room.exits and 'down' in room.exits:
+                            self.grid[self.curX][self.curY] = '|w±|n'
+                        elif 'up' in room.exits:
+                            self.grid[self.curX][self.curY] = '|w+|n'
+                        elif 'down' in room.exits:
+                            self.grid[self.curX][self.curY] = '|w-|n'
+                        else:
+                            self.grid[self.curX][self.curY] = '|W:|n'
                     self.grid[self.curX][self.curY] = SYMBOLS[room.db.sector_type]
 
 
@@ -193,6 +232,10 @@ class Map(object):
                 self.grid[ExitX][ExitY] = '|'
             elif type == 'horizontal':
                 self.grid[ExitX][ExitY] = '-'
+            elif type == 'nesw':
+                self.grid[ExitX][ExitY] = '/'
+            elif type == 'nwse':
+                self.grid[ExitX][ExitY] = '\\'
             else:
                 log_file("Unknown exit type", filename='map_debug.log')
 
