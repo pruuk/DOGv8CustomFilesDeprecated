@@ -16,6 +16,8 @@ from world.randomness_controller import distro_return_a_roll as roll
 from world.randomness_controller import distro_return_a_roll_sans_crits as rarsc
 from world.handlers.map import Map
 from evennia.utils import evtable
+from evennia import create_object
+from typeclasses.exits import Exit
 
 
 class Room(DefaultRoom):
@@ -162,12 +164,5 @@ class BuildingEntrance(IndoorRoom):
         self.db.info['outdoor room'] = False
         self.db.info['zone'] = None
         self.db.map_symbol = ['|155:|n','|255:|n','|355:|n','|455:|n','|555:|n']
-        self.key =f"Entry Room of {self.location.key}"
-        self.build_exit()
-
-    def build_exit(self):
-        """
-        Builds an exit to the outdoor room this building is located within.
-        """
-        pass
-        # TODO: Figure out how to implement this in the build menus
+        self.desc = "An entrance room for the building"
+        

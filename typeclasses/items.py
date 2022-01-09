@@ -4,6 +4,7 @@ Generic item classes and their base functions.
 """
 
 from typeclasses.objects import Object
+from typeclasses.rooms import BuildingEntrance
 from evennia import create_object
 from evennia.prototypes.spawner import spawn
 from evennia.utils.logger import log_file
@@ -200,6 +201,27 @@ class Equippable(Item):
             self.at_remove(dropper)
 
 
+class Tool(Equippable):
+    """
+    Class for tools that can be used to do a specific task, such as hammers,
+    shovels, pickaxes, saws, etc.
+    """
+    slots = ['hand']
+    multi_slot = False
+
+    # Most tools can be used as improvised weapons
+    pdamage = 1.03 # this is a multiplier!
+    sdamage = 1
+    cdamage= 1
+    handedness = 1
+    minrange = 0
+    maxrange = 1
+
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super(Equippable, self).at_object_creation()
+
+
 class Furnishing(Item):
     """
     Typeclass for furnishing items.
@@ -360,3 +382,78 @@ class Building(Item):
     handle floors/levels inside the building; The entrance should generally
     default to 0 elevation.
     """
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super().at_object_creation()
+        # set several of the traits to match a building
+        self.traits.mass.base = 100000
+        self.traits.hp.base = 1000000
+        self.traits.val.base = 25000
+        self.traits.cap.base = 50000
+        # make the first room inside the building
+        self.make_building_entry_room()
+
+    def make_building_entry_room(self):
+        """
+        Creates a room that is inside the Building object. This entry room
+        can then have any number of rooms connected to it that should be set as
+        indoor rooms. Floors within a building are indicated by the elevation
+        trait (0 is ground floor, 1 is floor above, -1 is floor below). Please
+        ensure the build description and attributes fit the number of rooms
+        inside the building. To create additional exits and extrances for the
+        building, use the Open command to make exits between an internal room
+        and an outdoor one.
+        """
+        entryway_room = create_object('typeclasses.rooms.BuildingEntrance',
+                    key=f'Entryway for {self.name}',
+                    location=self,
+                    home=self)
+        self.db.entryway = entryway_room
+
+
+class Vehicle(Item):
+    """
+    Subtype of item that can be used to carry large amounts of cargo from one
+    place to another. Generally, most vehicles must travel on a road or a water
+    body, but there are a few exceptions.
+
+    Vehicles have a variety of power sources, including:
+        Human power (rowing a boat)
+        Animal power (an animal pulling a cart)
+        Sail/Wind
+        Psionic
+        Tech
+        Fuel
+
+    In order to move the vehicle, you must have the required power source.
+    """
+
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super().at_object_creation()
+        # set several of the traits to match a building
+        self.traits.mass.base = 1000
+        self.traits.hp.base = 10000
+        self.traits.val.base = 1000
+        self.traits.cap.base = 5000
+        self.db.powered_by = None
+        self.db.travel_mode = None # i.e road, water, air
+
+    ## TODO: Add functrions for mounting/driving the vehicle, dismounting, fuel
+    ## or power checks, vehicle getting stuck, vehicle breaking
+    ## TODO: Add functions for driving a vehicle that prevent you from going
+    ## "off-road" if the vehcile must stay on a certain travel_mode
+
+
+class Key(Item):
+    """
+    A special subclass of item that can lock or unlock other items.
+    """
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super().at_object_creation()
+        self.db.key_for = [] # This should be populated with an ID for a
+        # locakble object or an exit to (and potentially from) a room
+        # NOTE:
+        #       locks are handled on exits using a line like:
+        #       <obj>.locks.add("traverse:holds(key_name)")

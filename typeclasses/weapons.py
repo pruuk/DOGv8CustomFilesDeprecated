@@ -20,7 +20,7 @@ class Weapon(Equippable):
         damage (int): primary attack stat
         handedness (int): indicates single- or double-handed weapon
     """
-    slots = ['hands']
+    slots = ['hand']
     multi_slot = False
 
     pdamage = 1.1 # this is a multiplier!

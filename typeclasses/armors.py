@@ -34,16 +34,9 @@ class Armor(Equippable):
                         type='static', base=1, extra={'learn' : 0})
         self.traits.add(key='mamm', name='Mental Armor Mitigation Multiplier', \
                         type='static', base=1, extra={'learn' : 0})
-        self.traits.add(key="hp", name="Health Points", type="gauge", \
-                        base=10, extra={'learn' : 0})
-        self.traits.add(key="mass", name="Mass", type='static', \
-                        base=1, extra={'learn' : 0})
-        # encumberance is a measure of how much the item can hold. This will
-        # obviously be higher for items like backbacks and quivers than for
-        # something like a helmet
-        self.traits.add(key="enc", name="Encumberance", type='counter', \
-                        base=0, max=1, \
-                        extra={'learn' : 0})
+        self.traits.hp.base = 500
+        self.traits.mass.base = self.mass
+        self.db.slots = self.slots
 
 
     def at_equip(self, character):

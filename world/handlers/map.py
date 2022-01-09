@@ -69,7 +69,7 @@ MAPPABLE_ROOM_COORDS = \
 # TODO: Expand the symbols dictionary to include nested dicts for all of the
 # factors listed above
 SYMBOLS = { None : ' . ', # unknown type, outdoors
-            'CHAR_INDOOR' : '|=z@|n', # the room we're in, if we're indoors
+            'CHAR_INDOOR' : '|[W@|n', # the room we're in, if we're indoors
             'CHAR_OUTDOOR' : '|=z@|n', # the room we're in, if we're indoors
             'CROSSROADS': '╬',
             'SECT_INSIDE': '.' }

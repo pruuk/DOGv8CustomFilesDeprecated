@@ -31,7 +31,9 @@ MAP_SYMBOLS = {
     'Shore' : ['|025▄|n', '|024▄|n', '|023▄|n', '|022▄|n', '|021▄|n',],
     'Water' : ['|001█|n', '|002█|n', '|003█|n', '|004█|n', '|005█|n',],
     'Fields' : ['|041▒|n', '|141▒|n', '|241▒|n', '|341▒|n', '|441▒|n',],
-    'City' : ['|155©|n', '|255©|n', '|355©|n', '|455©|n', '|555©|n']
+    'City' : ['|155©|n', '|255©|n', '|355©|n', '|455©|n', '|555©|n'],
+    'Indoors' : ['|155:|n', '|255:|n', '|355:|n', '|455:|n', '|555:|n'],
+    'Cave': ['|155Ç|n', '|255Ç|n', '|355Ç|n', '|455Ç|n', '|555Ç|n'],
 }
 
 
@@ -270,36 +272,8 @@ def nomatch_biomes(menu, caller, room, string):
             biome_name = split_text[0]
             biome_val = float(split_text[1])
             caller.msg(f"Trying to set {biome_name} to {biome_val}")
-            if biome_name == 'road':
+            if biome_name in MAP_SYMBOLS.keys():
                 room.biomes.road.base = biome_val
-            elif biome_name == 'trail':
-                room.biomes.trail.base = biome_val
-            elif biome_name == 'plains':
-                room.biomes.plains.base = biome_val
-            elif biome_name == 'forest':
-                room.biomes.forest.base = biome_val
-            elif biome_name == 'jungle':
-                room.biomes.jungle.base = biome_val
-            elif biome_name == 'hills':
-                room.biomes.hills.base = biome_val
-            elif biome_name == 'badlands':
-                room.biomes.badlands.base = biome_val
-            elif biome_name == 'tiaga':
-                room.biomes.tiaga.base = biome_val
-            elif biome_name == 'tundra':
-                room.biomes.tundra.base = biome_val
-            elif biome_name == 'swamp':
-                room.biomes.swamp.base = biome_val
-            elif biome_name == 'savannah':
-                room.biomes.savannah.base = biome_val
-            elif biome_name == 'shore':
-                room.biomes.shore.base = biome_val
-            elif biome_name == 'water':
-                room.biomes.water.base = biome_val
-            elif biome_name == 'fields':
-                room.biomes.fields.base = biome_val
-            elif biome_name == 'city':
-                room.biomes.city.base = biome_val
     return
 
 
@@ -432,6 +406,18 @@ def find_adjacent_room_ids(room, caller):
                     if int(adj_room_candidate.traits.xcord.current) == int(room.traits.xcord.current) - 1:
                         # Y matches, X is 1 room west of room we're editing
                         adjacent_rooms.append([adj_room_candidate.id, 'west'])
+                elif int(adj_room_candidate.traits.ycord.current) == int(room.traits.ycord.current) + 1  and \
+                    int(adj_room_candidate.traits.xcord.current) == int(room.traits.xcord.current) + 1:
+                    adjacent_rooms.append([adj_room_candidate.id, 'northeast'])
+                elif int(adj_room_candidate.traits.ycord.current) == int(room.traits.ycord.current) + 1  and \
+                    int(adj_room_candidate.traits.xcord.current) == int(room.traits.xcord.current) - 1:
+                    adjacent_rooms.append([adj_room_candidate.id, 'northwest'])
+                elif int(adj_room_candidate.traits.ycord.current) == int(room.traits.ycord.current) - 1  and \
+                    int(adj_room_candidate.traits.xcord.current) == int(room.traits.xcord.current) + 1:
+                    adjacent_rooms.append([adj_room_candidate.id, 'southeast'])
+                elif int(adj_room_candidate.traits.ycord.current) == int(room.traits.ycord.current) - 1  and \
+                    int(adj_room_candidate.traits.xcord.current) == int(room.traits.xcord.current) - 1:
+                    adjacent_rooms.append([adj_room_candidate.id, 'southwest'])
         log_file(f"List of adjacent rooms: {adjacent_rooms}", filename='room_build_debug.log' )
         return adjacent_rooms
     else:
@@ -470,6 +456,14 @@ def get_return_dir_string(cardinal):
             return 'east;e,west;w'
         if cardinal == 'west':
             return 'west;w,east;e'
+        if cardinal == 'northwest':
+            return 'northwest;nw,southeast;se'
+        if cardinal == 'southeast':
+            return 'southeast;se,northwest;nw'
+        if cardinal == 'northeast':
+            return 'northeast;ne,southwest;sw'
+        if cardinal == 'southwest':
+            return 'southwest;sw,northeast;ne'
     else:
         return None
 

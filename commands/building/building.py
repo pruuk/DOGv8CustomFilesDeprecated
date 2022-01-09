@@ -11,8 +11,10 @@ editing a specific value on an object.
 from evennia.contrib.building_menu import BuildingMenu
 from commands.command import Command
 from commands.building.room_building import RoomSculptingMenu
+from commands.building.item_building import ItemMakingMenu
 from evennia import create_object
 from typeclasses.objects import Object
+from typeclasses.items import Building
 from evennia.utils.logger import log_file
 from evennia import utils as utils
 from world.handlers.biomes import apply_biomes
@@ -55,8 +57,32 @@ class SculptCmd(Command):
             self.msg("|rThe object {} cannot be edited.|n".format(obj.get_display_name(self.caller)))
             return
 
+
         menu = Menu(self.caller, obj)
         menu.open()
+
+
+class FormItemCmd(Command):
+    """
+    Forming Command.
+
+    Usage:
+        @form
+
+    Opens a building menu to create item objects of various types. This menu
+    will only allow you to create a base item of a given type with a name you
+    have chosen. To edit that item, exit the forming menu and use the sculpt
+    command on the item.
+    """
+    key = '@form'
+    locks = 'cmd:id(1) or perm(Builders)'
+    help_category = 'Building'
+
+    def func(self):
+        Menu = ItemMakingMenu
+        menu = Menu(self.caller, self.caller.location)
+        menu.open()
+
 
 
 class CoordinatesWormCmd(Command):
@@ -174,3 +200,34 @@ class CoordinateWorm(Object):
         elif exit_name == 'southwest':
             self.curX -= 1
             self.curY -= 1
+
+
+class CreateBuildingCmd(Command):
+    """
+    This command creates a Building Item. When the building is created, this
+    should in turn create and entry room inside the building object (which is
+    in turn inside the caller's current location) and the exits between the
+    new entryway room and the caller's current location.
+
+    Usage:
+        @createbuilding <building's name>
+
+    Examples:
+        @createbuilding A Large Stone Inn
+
+    """
+    key = '@createbuilding'
+    locks = 'cmd:id(1) or perm(Builders)'
+    help_category = 'Building'
+
+    def func(self):
+        if not self.args.strip():
+            self.msg("|rYou should provide a name for the building!|n")
+            return
+        outdoor_room = self.caller.location.id
+        building = create_object('typeclasses.items.Building',
+                key=self.args.strip(),
+                location=self.caller.location,
+                home=self.caller.location)
+        self.caller.execute_cmd(f"open enter building;enter,exit building;exit = #{building.db.entryway.id}")
+        self.caller.msg("You create a building")
