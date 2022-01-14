@@ -5,6 +5,7 @@ be dropped in the current room the builder is standing in.
 """
 from evennia.contrib.building_menu import BuildingMenu
 from evennia.utils import lazy_property
+from evennia import utils as utils
 from world.handlers.traits import TraitHandler
 from evennia.utils.logger import log_file
 from evennia import create_object
@@ -30,7 +31,10 @@ class ItemMakingMenu(BuildingMenu):
         Create an item of a specific type. This will open a submenu of item type
         choices.
         """, text=text_item_creation,
-        on_nomatch=nomatch_item_creation)
+        on_nomatch=nomatch_item_creation),
+        self.add_choice("|=zDelete an Item|n", "2",
+        text=text_delete,
+        on_nomatch=nomatch_item_deletion)
 
 
 # Menu functions
@@ -60,7 +64,7 @@ generally found as raw materials.
 |w6|n. |yConsumables|n are materials that are exhausted within a small, limited
 number of uses. Fuel, first aid kits, firewood, etc.
 
-|w7|n. |yBuildings are structures that can be entered. By default, creating a
+|w7|n. |yBuildings|n are structures that can be entered. By default, creating a
 a building will also create 3 other objects: an entry room inside the
 building with coordinates 0,0 amd exits to and from the entry room.
 
@@ -90,6 +94,17 @@ force.
     text += "\nExample: |w8|n. |510Boiled Leather Vest|n"
     text += "\n    - would create an item of subtype Armor named 'Boiled Leather Vest'."
     text += "\nType |w@|n to go back to the main menu."
+    return text
+
+def text_delete(caller, room):
+    """ Shows text with a list of items to delete."""
+    text = "-" * 79
+    text += "\nItems in room:"
+    index = 0
+    for item in room.contents:
+        if utils.inherits_from(item, 'typeclasses.items.Item'):
+            index += 1
+            text += f"\n    {index}. {item.key}"
     return text
 
 def nomatch_item_creation(menu, caller, room, string):
@@ -162,3 +177,17 @@ def nomatch_item_creation(menu, caller, room, string):
         if item:
             caller.msg(f"You create an item named {name_str}.")
     return
+
+
+def nomatch_item_deletion(menu, caller, room, string):
+    """
+    The user types something into the submenu for item deletion
+    """
+    option_num = string[:1]
+    index = 0
+    for item in room.contents:
+        if utils.inherits_from(item, 'typeclasses.items.Item'):
+            index += 1
+            if int(option_num) == index:
+                caller.msg(f"Deleting {item.key}")
+                item.delete()
