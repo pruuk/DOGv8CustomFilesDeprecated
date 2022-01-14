@@ -50,8 +50,7 @@ class SculptCmd(Command):
         obj = self.caller.search(self.args.strip(), global_search=True)
         if not obj:
             return
-
-        if obj.typename == "Room":
+        if utils.inherits_from(obj, 'typeclasses.rooms.Room'):
             Menu = RoomSculptingMenu
         else:
             self.msg("|rThe object {} cannot be edited.|n".format(obj.get_display_name(self.caller)))
@@ -105,7 +104,7 @@ class CoordinatesWormCmd(Command):
 
     """
     key='@coordworm'
-    locks = 'cmd:id(1)'
+    locks = 'cmd:id(1) or perm(Admins)'
     help_category = 'Building'
 
     def func(self):
@@ -131,11 +130,12 @@ class CoordinateWorm(Object):
     """
 
     def at_object_creation(self):
+        self.zone = self.location.db.info['zone']
+        self.outdoors = self.location.db.info['outdoor room']
         self.has_mapped = {}
         self.has_mapped_room_ids = []
         self.curX = self.location.traits.xcord.current
         self.curY = self.location.traits.ycord.current
-
         self.explore_map(self.location)
 
 
@@ -170,6 +170,8 @@ class CoordinateWorm(Object):
             self.has_mapped_room_ids.append(room.id)
             room.traits.xcord.base = self.curX
             room.traits.ycord.base = self.curY
+            room.db.info['zone'] = self.zone
+            room.db.info['outdoor room'] = self.outdoors
 
 
     def update_pos(self, room, exit_name):
