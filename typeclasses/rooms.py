@@ -165,4 +165,21 @@ class BuildingEntrance(IndoorRoom):
         self.db.info['zone'] = None
         self.db.map_symbol = ['|155:|n','|255:|n','|355:|n','|455:|n','|555:|n']
         self.desc = "An entrance room for the building"
-        
+
+
+class TownEntrance(Room):
+    """
+    Special subtype of Room that represents the first room inside a town.
+    """
+    def at_object_creation(self):
+        "Called only at object creation and with update command."
+        super().at_object_creation()
+        self.traits.size.base = 100 # standard of 100 meters square
+        self.traits.enc.base = 1000000
+        self.traits.rot.base = 0
+        self.traits.elev.base = 0
+        self.traits.trackmax.base =  10
+        self.db.info['outdoor room'] = True
+        self.db.info['zone'] = None
+        self.db.map_symbol = ['|155©|n','|255©|n','|355©|n','|455©|n','|555©|n']
+        self.desc = "An entrance room for the building"

@@ -64,9 +64,8 @@ generally found as raw materials.
 |w6|n. |yConsumables|n are materials that are exhausted within a small, limited
 number of uses. Fuel, first aid kits, firewood, etc.
 
-|w7|n. |yBuildings|n are structures that can be entered. By default, creating a
-a building will also create 3 other objects: an entry room inside the
-building with coordinates 0,0 amd exits to and from the entry room.
+|w7|n. |yTraps|n are items that can apply some kind of status effect to players
+or NPCs. For example, a spiked pit trap might apply the bleeding status effect.
 
 |w8|n. |yArmor & Clothing, Jewelry|n are wearable items that may or may not provide
 some passive benefit to the wearer.
@@ -89,6 +88,8 @@ a place it is not designed to go can damage or get the vehicle stuck.
 |wC|n. |yKeys|n are items that can be used to open a specific item, exit, or set of
 items and exits. This lock can sometimes be circumvented by skill or
 force.
+
+
 """
     text += "\nType in |w<menu number or letter>|n. |510<Name of Item>|n to create the item"
     text += "\nExample: |w8|n. |510Boiled Leather Vest|n"
@@ -145,7 +146,7 @@ def nomatch_item_creation(menu, caller, room, string):
                     location=caller.location,
                     home=caller.location)
         elif option_num == '7':
-            item = create_object('typeclasses.items.Building',
+            item = create_object('typeclasses.items.Traps',
                     key=name_str,
                     location=caller.location,
                     home=caller.location)
@@ -174,6 +175,7 @@ def nomatch_item_creation(menu, caller, room, string):
                     key=name_str,
                     location=caller.location,
                     home=caller.location)
+
         if item:
             caller.msg(f"You create an item named {name_str}.")
     return

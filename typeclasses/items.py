@@ -408,6 +408,39 @@ class Building(Item):
                     key=f'Entryway for {self.name}',
                     location=self,
                     home=self)
+        # set the zone name to match the name of the building
+        entryway_room.db.info['zone'] = str(self.key)
+        self.db.entryway = entryway_room
+
+
+class Town(Item):
+    """
+    Town object. Much like the building, this will be a self-contained zone
+    that makes up the rooms in the town and will be built with a command to
+    create an enter <townname> exit to the Town.
+    """
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super().at_object_creation()
+        # set several of the traits to match a building
+        self.traits.mass.base = 1000000
+        self.traits.hp.base = 10000000
+        self.traits.val.base = 250000
+        self.traits.cap.base = 5000000
+        # make the first room inside the building
+        self.make_building_entry_room()
+
+    def make_building_entry_room(self):
+        """
+        Creates a room that is inside the Town object. This will be the 0,0
+        room for the town.
+        """
+        entryway_room = create_object('typeclasses.rooms.TownEntrance',
+                    key=f'Entrance to {self.name}',
+                    location=self,
+                    home=self)
+        # set the zone name to match the name of the building
+        entryway_room.db.info['zone'] = str(self.key)
         self.db.entryway = entryway_room
 
 
@@ -457,3 +490,23 @@ class Key(Item):
         # NOTE:
         #       locks are handled on exits using a line like:
         #       <obj>.locks.add("traverse:holds(key_name)")
+
+
+class Trap(Item):
+    """
+    A special kind of item that applies status effects, usually of a type that
+    do damage or immobilize the person caught by the trap
+    """
+    def at_object_creation(self):
+        "Only called at creation and forced update"
+        super().at_object_creation()
+        self.traits.mass.base = 100
+        self.traits.hp.base = 1000
+        self.traits.val.base = 100
+        self.traits.cap.base = 50
+
+    def apply_status_effect(self, trappee):
+        """
+        Applies a status effect to a person caught im the trap.
+        """
+        pass
