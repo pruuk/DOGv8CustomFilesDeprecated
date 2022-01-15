@@ -105,6 +105,34 @@ class CmdDig(default_cmds.CmdDig, MuxCommand):
             alias_string,
             typeclass,
         )
+        # set coordinates of connected room based upon current room
+        if self.rhs_objs:
+            to_exit = self.rhs_objs[0]
+            if to_exit["name"] == "north" or to_exit["name"] =="n":
+                new_room.traits.ycord.base = self.caller.location.traits.ycord.base + 1
+                new_room.traits.xcord.base = self.caller.location.traits.xcord.base
+            if to_exit["name"] == "east" or to_exit["name"] =="e":
+                new_room.traits.ycord.base = self.caller.location.traits.ycord.base
+                new_room.traits.xcord.base = self.caller.location.traits.xcord.base + 1
+            if to_exit["name"] == "south" or to_exit["name"] =="s":
+                new_room.traits.ycord.base = self.caller.location.traits.ycord.base - 1
+                new_room.traits.xcord.base = self.caller.location.traits.xcord.base
+            if to_exit["name"] == "west" or to_exit["name"] =="w":
+                new_room.traits.ycord.base = self.caller.location.traits.ycord.base
+                new_room.traits.xcord.base = self.caller.location.traits.xcord.base - 1
+            if to_exit["name"] == "northwest" or to_exit["name"] =="nw":
+                new_room.traits.ycord.base = self.caller.location.traits.ycord.base + 1
+                new_room.traits.xcord.base = self.caller.location.traits.xcord.base - 1
+            if to_exit["name"] == "northeast" or to_exit["name"] =="ne":
+                new_room.traits.ycord.base = self.caller.location.traits.ycord.base + 1
+                new_room.traits.xcord.base = self.caller.location.traits.xcord.base + 1
+            if to_exit["name"] == "southwest" or to_exit["name"] =="sw":
+                new_room.traits.ycord.base = self.caller.location.traits.ycord.base - 1
+                new_room.traits.xcord.base = self.caller.location.traits.xcord.base - 1
+            if to_exit["name"] == "southeast" or to_exit["name"] =="se":
+                new_room.traits.ycord.base = self.caller.location.traits.ycord.base - 1
+                new_room.traits.xcord.base = self.caller.location.traits.xcord.base + 1
+
 
         # create exit to room
 
