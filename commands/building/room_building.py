@@ -447,7 +447,8 @@ def check_adjacent_rooms_for_missing_exits(room, adjacent_rooms):
 
 def get_return_dir_string(cardinal):
     """ Gets the aliases for a cardinal direction and the return direction."""
-    if cardinal in ['north', 'south', 'east', 'west']:
+    if cardinal in ['north', 'south', 'east', 'west', 'northwest', 'northeast', \
+                    'southeast', 'southwest']:
         if cardinal == 'north':
             return 'north;n,south;s'
         if cardinal == 'south':
