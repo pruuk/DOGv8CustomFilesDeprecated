@@ -181,7 +181,7 @@ class Room(DefaultRoom):
                 items += obj.get_display_name(looker)  + ","
             elif utils.inherits_from(obj, 'typeclasses.items.Building') or \
                 utils.inherits_from(obj, 'typeclasses.items.Town'):
-                buildingsntowns += obj.get_display_name(looker) + ",\n"
+                buildingsntowns += obj.get_display_name(looker) + ","
             elif utils.inherits_from(obj, 'typeclasses.items.RoadsAndTrail'):
                 roads += obj.get_display_name(looker)  + ","
         room_name = f"|c{self.get_display_name(looker)}|n"

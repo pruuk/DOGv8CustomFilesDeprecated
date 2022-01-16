@@ -8,7 +8,8 @@ for allowing Characters to traverse the exit to its destination.
 
 """
 from evennia import DefaultExit
-
+from world.handlers.traits import TraitHandler
+from evennia.utils import lazy_property
 
 class Exit(DefaultExit):
     """
@@ -35,5 +36,15 @@ class Exit(DefaultExit):
                                         not be called if the attribute `err_traverse` is
                                         defined, in which case that will simply be echoed.
     """
+    @lazy_property
+    def talents(self):
+        """TraitHandler that manages room talents."""
+        # note: These will be used rarely for rooms
+        return TraitHandler(self, db_attribute='talents')
+
+    @lazy_property
+    def status_effects(self):
+        """TraitHandler that manages room status effects."""
+        return TraitHandler(self, db_attribute='status_effects')
 
     pass

@@ -32,10 +32,12 @@ class Item(Object):
         """TraitHandler that manages item status effects."""
         return TraitHandler(self, db_attribute='status_effects')
 
+
     @lazy_property
-    def physical_materials(self):
-        """TraitHandler that manages what materials an item is composed of."""
-        return TraitHandler(self, db_attribute='material')
+    def talents(self):
+        """TraitHandler that manages room talents."""
+        # note: These will be used rarely for rooms
+        return TraitHandler(self, db_attribute='talents')
 
     def at_object_creation(self):
         "Only called at creation and forced update"
@@ -220,6 +222,24 @@ class Tool(Equippable):
     def at_object_creation(self):
         "Only called at creation and forced update"
         super().at_object_creation()
+        self.traits.add(key='minran', name='Minimum Weapon Range', type='static', \
+                        base=self.minrange)
+        self.traits.add(key='maxran', name='Maximum Weapon Range', type='static', \
+                        base=self.maxrange)
+        self.traits.add(key='pdamm', name='Base Weapon Physical Damage Multiplier', \
+                        type='static', base=self.pdamage, extra={'learn' : 0})
+        self.traits.add(key='sdamm', name='Base Weapon Stamina Damage Multiplier', \
+                        type='static', base=self.sdamage, extra={'learn' : 0})
+        self.traits.add(key='cdamm', name='Base Weapon Conviction Damage Multiplier', \
+                        type='static', base=self.cdamage, extra={'learn' : 0})
+        self.db.handedness = self.handedness
+        self.db.combat_cmdset = 'commands.combat.MeleeWeaponCmdSet'
+        self.db.combat_descriptions = {
+        'hit': "hits for",
+        'miss': "misses",
+        'dodged': 'attacks, but is dodged by',
+        'blocked': 'attacks, but is blocked by'
+        }
 
 
 class Furnishing(Item):
@@ -251,6 +271,7 @@ class Furnishing(Item):
         self.traits.add(key="light", name='Light', type="static", \
                         base = 0, extra={'fuel' : None})
         self.db.lit = False
+        self.db.powered_by = None # type of fuel if this is a light
 
     def at_sit(self, sitter):
         """ Called when someone tries to sit on this furnishing."""
@@ -300,6 +321,7 @@ class LightSource(Equippable):
         # default fuel type is Oil. Other types include: wood, fat, gas, battery
         # and self (think of a torch)
         self.db.lit = False
+        self.db.powered_by = None # type of fuel
 
     def at_light(self, lighter=None):
         """ Called when the object is lit """
@@ -504,6 +526,17 @@ class Trap(Item):
         self.traits.hp.base = 1000
         self.traits.val.base = 100
         self.traits.cap.base = 50
+        self.db.armed = False
+        self.db.status_effects = {} # dict of status effects, dice_to_hit
+        self.db.triggered_by = {} # dict of triggering actions
+        self.talents.add(
+            key='sneak',
+            type='static',
+            base=100,
+            mod=0,
+            name='Sneak',
+            extra={'learn' : 0}
+        )
 
     def apply_status_effect(self, trappee):
         """

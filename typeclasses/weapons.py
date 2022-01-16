@@ -31,10 +31,10 @@ class Weapon(Equippable):
     maxrange = 2
 
     def at_object_creation(self):
-        super(Weapon, self).at_object_creation()
+        super().at_object_creation()
         self.traits.add(key='minran', name='Minimum Weapon Range', type='static', \
                         base=self.minrange)
-        self.traits.add(key='maxrange', name='Maximum Weapon Range', type='static', \
+        self.traits.add(key='maxran', name='Maximum Weapon Range', type='static', \
                         base=self.maxrange)
         self.traits.add(key='pdamm', name='Base Weapon Physical Damage Multiplier', \
                         type='static', base=self.pdamage, extra={'learn' : 0})

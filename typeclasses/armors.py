@@ -32,7 +32,7 @@ class Armor(Equippable):
                         type='static', base=1, extra={'learn' : 0})
         self.traits.add(key='samm', name='Stamina Armor Mitigation Multiplier', \
                         type='static', base=1, extra={'learn' : 0})
-        self.traits.add(key='mamm', name='Mental Armor Mitigation Multiplier', \
+        self.traits.add(key='camm', name='Mental Armor Mitigation Multiplier', \
                         type='static', base=1, extra={'learn' : 0})
         self.traits.hp.base = 500
         self.traits.mass.base = self.mass

@@ -21,7 +21,48 @@ from world.handlers.biomes import apply_biomes
 from django.conf import settings
 
 
-class CmdDestroy(MuxCommand, default_cmds.CmdDig):
+# overwrite create and destroy commands
+class CmdCreate( default_cmds.CmdCreate, MuxCommand):
+    """
+    create new objects
+    Usage:
+      create[/drop] <objname>[;alias;alias...][:typeclass], <objname>...
+    switch:
+       drop - automatically drop the new object into your current
+              location (this is not echoed). This also sets the new
+              object's home to the current location rather than to you.
+    Creates one or more new objects. If typeclass is given, the object
+    is created as a child of this typeclass. The typeclass script is
+    assumed to be located under types/ and any further
+    directory structure is given in Python notation. So if you have a
+    correct typeclass 'RedButton' defined in
+    types/examples/red_button.py, you could create a new
+    object of this type like this:
+       create/drop button;red : examples.red_button.RedButton
+
+
+    Note: Create has been disabled. Please use 'form', which opens an item
+    creation menu.
+    """
+
+    key = "create"
+    switch_options = ("drop",)
+    locks = "cmd:id(1)"
+    help_category = "Building"
+
+    # lockstring of newly created objects, for easy overloading.
+    # Will be formatted with the {id} of the creating object.
+    new_obj_lockstring = "control:id({id}) or perm(Admin);delete:id({id}) or perm(Admin)"
+
+    def func(self):
+        """
+        Creates the object.
+        """
+        super().func()
+        return
+
+
+class CmdDestroy(MuxCommand, default_cmds.CmdDestroy):
     """
     permanently delete objects
     Usage:
@@ -41,6 +82,14 @@ class CmdDestroy(MuxCommand, default_cmds.CmdDig):
 
     NOTE: You cannot delete the room you're in or your own character object
     """
+    key = "destroy"
+    aliases = ["delete", "del"]
+    switch_options = ("override", "force")
+    locks = "cmd:perm(destroy) or perm(Builder)"
+    help_category = "Building"
+
+    confirm = True  # set to False to always bypass confirmation
+    default_confirm = "yes"  # what to assume if just pressing enter (yes/no)
 
     def parse(self):
         """
