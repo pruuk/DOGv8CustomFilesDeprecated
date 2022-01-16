@@ -39,7 +39,7 @@ class Item(Object):
 
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Item, self).at_object_creation()
+        super().at_object_creation()
         self.traits.clear()
         self.locks.add(";".join(("puppet:perm(Builder)",
                                  "equip:false()",
@@ -130,7 +130,7 @@ class Trash(Item):
 
     def at_object_creation(self, parent_materials):
         "Only called at creation and forced update"
-        super(Item, self).at_object_creation()
+        super().at_object_creation()
         for material, data in parent_materials.items():
             self.materials.add(key=data[key])
 
@@ -142,7 +142,7 @@ class Bundable(Item):
     """
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Bundlable, self).at_object_creation()
+        super().at_object_creation()
         self.db.bundle_size = 999
         self.db.prototype_name = None
 
@@ -172,7 +172,7 @@ class Equippable(Item):
 
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Equippable, self).at_object_creation()
+        super().at_object_creation()
         self.locks.add("puppet:false();equip:true()")
         self.db.slots = self.slots
         self.db.multi_slot = self.multi_slot
@@ -219,7 +219,7 @@ class Tool(Equippable):
 
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Equippable, self).at_object_creation()
+        super().at_object_creation()
 
 
 class Furnishing(Item):
@@ -236,7 +236,7 @@ class Furnishing(Item):
     """
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Item, self).at_object_creation()
+        super().at_object_creation()
         # Can this be sat upon? Can it be used as a bed?
         self.db.sit = False
         self.db.bed = False
@@ -289,7 +289,7 @@ class LightSource(Equippable):
 
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Equippable, self).at_object_creation()
+        super().at_object_creation()
         self.locks.add("puppet:false();equip:true()")
         self.db.slots = self.slots
         self.db.multi_slot = self.multi_slot
@@ -327,7 +327,7 @@ class RoadsAndTrail(Item):
 
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Item, self).at_object_creation()
+        super().at_object_creation()
         self.traits.mass.base=100000
         self.traits.hp.base=10000
 
@@ -340,7 +340,7 @@ class Component(Item):
 
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Item, self).at_object_creation()
+        super().at_object_creation()
 
     def at_craft(self, crafter):
         """ These items are consumed as part of crafting. """
@@ -351,7 +351,7 @@ class Consumnable(Item):
     """ Subtype of item that is consumed. May have a number of charges. """
     def at_object_creation(self):
         "Only called at creation and forced update"
-        super(Item, self).at_object_creation()
+        super().at_object_creation()
         self.traits.add(key="charge", name="Charges", type="gauge", \
                         base=10, extra={'learn' : 0})
 

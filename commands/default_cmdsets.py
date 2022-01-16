@@ -16,7 +16,8 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 from evennia import default_cmds
 from commands.building.building import SculptCmd, CoordinatesWormCmd, \
-    CreateBuildingCmd, FormItemCmd, CmdDig, CmdTunnel, CreateTownCmd
+    CreateBuildingCmd, FormItemCmd, CmdDig, CmdTunnel, CreateTownCmd, \
+    CmdDestroy
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -42,7 +43,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CreateBuildingCmd())
         self.add(CreateTownCmd())
         self.add(FormItemCmd())
-        # self.add(CmdDestroy())
+        self.add(CmdDestroy())
         self.add(CmdTunnel())
         self.add(CmdDig())
 

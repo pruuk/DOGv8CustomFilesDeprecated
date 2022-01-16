@@ -11,7 +11,7 @@ editing a specific value on an object.
 from evennia.contrib.building_menu import BuildingMenu
 from commands.command import MuxCommand, Command
 from commands.building.room_building import RoomSculptingMenu
-from commands.building.item_building import ItemMakingMenu
+from commands.building.item_building import ItemMakingMenu, ItemSculptingMenu
 from evennia import create_object, default_cmds
 from typeclasses.objects import Object
 from typeclasses.items import Building
@@ -19,6 +19,95 @@ from evennia.utils.logger import log_file
 from evennia import utils as utils
 from world.handlers.biomes import apply_biomes
 from django.conf import settings
+
+
+class CmdDestroy(MuxCommand, default_cmds.CmdDig):
+    """
+    permanently delete objects
+    Usage:
+       destroy[/switches] [obj, obj2, obj3, [dbref-dbref], ...]
+    Switches:
+       override - The destroy command will usually avoid accidentally
+                  destroying account objects. This switch overrides this safety.
+       force - destroy without confirmation.
+    Examples:
+       destroy house, roof, door, 44-78
+       destroy 5-10, flower, 45
+       destroy/force north
+    Destroys one or many objects. If dbrefs are used, a range to delete can be
+    given, e.g. 4-10. Also the end points will be deleted. This command
+    displays a confirmation before destroying, to make sure of your choice.
+    You can specify the /force switch to bypass this confirmation.
+
+    NOTE: You cannot delete the room you're in or your own character object
+    """
+
+    def parse(self):
+        """
+        This method is called by the cmdhandler once the command name
+        has been identified. It creates a new set of member variables
+        that can be later accessed from self.func() (see below)
+
+        The following variables are available for our use when entering this
+        method (from the command definition, and assigned on the fly by the
+        cmdhandler):
+           self.key - the name of this command ('look')
+           self.aliases - the aliases of this cmd ('l')
+           self.permissions - permission string for this command
+           self.help_category - overall category of command
+
+           self.caller - the object calling this command
+           self.cmdstring - the actual command name used to call this
+                            (this allows you to know which alias was used,
+                             for example)
+           self.args - the raw input; everything following self.cmdstring.
+           self.cmdset - the cmdset from which this command was picked. Not
+                         often used (useful for commands like 'help' or to
+                         list all available commands etc)
+           self.obj - the object on which this command was defined. It is often
+                         the same as self.caller.
+
+        A MUX command has the following possible syntax:
+
+          name[ with several words][/switch[/switch..]] arg1[,arg2,...] [[=|,] arg[,..]]
+
+        The 'name[ with several words]' part is already dealt with by the
+        cmdhandler at this point, and stored in self.cmdname (we don't use
+        it here). The rest of the command is stored in self.args, which can
+        start with the switch indicator /.
+
+        This parser breaks self.args into its constituents and stores them in the
+        following variables:
+          self.switches = [list of /switches (without the /)]
+          self.raw = This is the raw argument input, including switches
+          self.args = This is re-defined to be everything *except* the switches
+          self.lhs = Everything to the left of = (lhs:'left-hand side'). If
+                     no = is found, this is identical to self.args.
+          self.rhs: Everything to the right of = (rhs:'right-hand side').
+                    If no '=' is found, this is None.
+          self.lhslist - [self.lhs split into a list by comma]
+          self.rhslist - [list of self.rhs split into a list by comma]
+          self.arglist = [list of space-separated args (stripped, including '=' if it exists)]
+
+          All args and list members are stripped of excess whitespace around the
+          strings, but case is preserved.
+        """
+        super(MuxCommand, self).parse()
+
+    def after_parse(self):
+        """
+        Run after parse() and before func()
+        """
+        if lhslist:
+            for arg in lhslist:
+                target = self.caller.search(self.arg)
+                if target:
+                    if target == self.caller:
+                        self.caller.msg("You cannot delete yourself. Aborting")
+                        return
+                    if target == self.caller.location:
+                        self.caller.msg("You cannot delete the room you're standing in. Aborting")
+                        return
 
 
 class CmdDig(default_cmds.CmdDig, MuxCommand):
@@ -356,6 +445,8 @@ class SculptCmd(Command):
             return
         if utils.inherits_from(obj, 'typeclasses.rooms.Room'):
             Menu = RoomSculptingMenu
+        elif utils.inherits_from(obj, 'typeclasses.items.Item'):
+            Menu = ItemSculptingMenu
         else:
             self.msg("|rThe object {} cannot be edited.|n".format(obj.get_display_name(self.caller)))
             return

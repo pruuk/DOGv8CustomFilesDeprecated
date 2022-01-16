@@ -12,7 +12,6 @@ from evennia import create_object
 from typeclasses.objects import Object
 
 class ItemMakingMenu(BuildingMenu):
-
     """
     Building menu to create an item of a specific type. This menu will create
     a single copy or a specific number of items of a specific type. The
@@ -146,7 +145,7 @@ def nomatch_item_creation(menu, caller, room, string):
                     location=caller.location,
                     home=caller.location)
         elif option_num == '7':
-            item = create_object('typeclasses.items.Traps',
+            item = create_object('typeclasses.items.Trap',
                     key=name_str,
                     location=caller.location,
                     home=caller.location)
@@ -193,3 +192,120 @@ def nomatch_item_deletion(menu, caller, room, string):
             if int(option_num) == index:
                 caller.msg(f"Deleting {item.key}")
                 item.delete()
+
+class ItemSculptingMenu(BuildingMenu):
+    """
+    Menu and submenus for making edits to items and the subtypes of items.
+    """
+    @lazy_property
+    def traits(self):
+        """TraitHandler that manages item traits."""
+        return TraitHandler(self)
+
+    def init(self, item):
+        self.item = item
+        self.add_choice("|=zTitle|n", key="1", attr="key", glance="|y{obj.key}|n", text="""
+                -------------------------------------------------------------------------------
+                Editing the title of {{obj.key}}(#{{obj.id}})
+
+                You can change the title simply by entering it.
+                Use |y{back}|n to go back to the main menu.
+
+                Current title: |c{{obj.key}}|n
+        """.format(back="|n or |y".join(self.keys_go_back)))
+        self.add_choice_edit("|=zDescription|n", "2")
+        self.add_choice("|=zTraits|n", "3", glance=glance_traits,
+            text=text_traits, on_nomatch=nomatch_traits)
+
+#menu functions
+def glance_traits(item):
+    """Show the Room's Traits"""
+    glance = ""
+    if item.traits:
+        glance += f"\n  |yValue: |Y{item.traits.val.current}|n"
+        glance += f"\n  |yMass: |Y{item.traits.mass.current}|n"
+        glance += f"\n  |yHPs: |Y{item.traits.hp.current}|n"
+        glance += f"\n  |yQuality: |Y{item.traits.qual.current}|n"
+        glance += f"\n  |yCondition: |Y{item.traits.cond.current}|n"
+        glance += f"\n  |yCapacity: |Y{item.traits.cap.current}|n"
+        if item.traits.comfort:
+            glance += f"\n  |yComfort: |Y{item.traits.comfort.current}|n"
+        if item.traits.light:
+            glance += f"\n  |yLight: |Y{item.traits.light.current}|n"
+        if item.traits.charge:
+            glance += f"\n  |yCharges: |Y{item.traits.charge.current}|n"
+    else:
+        glance += "No traits defined."
+    return glance
+
+
+def text_traits(caller, item):
+    """ Show the traits info as a textual submenu"""
+    text = "-" * 79
+    text += "\n\nEditable Item Traits:"
+    text += f"\n  1. |yItem Value (in coppers): |Y{item.traits.val.current}|n"
+    text += f"\n  2. |yItem Mass (in kilograms): |Y{item.traits.mass.current}|n"
+    text += f"\n  3. |yItem Health: |Y{item.traits.hp.current}|n"
+    text += f"\n  4. |yItem Quality: |Y{item.traits.qual.current}|n"
+    text += f"\n  5. |yItem Condition: |Y{item.traits.cond.current}|n"
+    text += f"\n  6. |yItem Capacity (in kilgrams): |Y{item.traits.cap.current}|n"
+    if item.traits.comfort:
+        text += f"\n  7. |yComfort: |Y{item.traits.comfort.current}|n"
+    if item.traits.light:
+        text += f"\n  8. |yItem Light Intensity: |Y{item.traits.light.current}|n"
+    if item.traits.charge:
+        text += f"\n  9. |yNumber of Charges: |Y{item.traits.charge.current}|n"
+    text += "\n  Type |y@|n to return to the main menu."
+    return text
+
+def nomatch_traits(menu, caller, item, string):
+    """
+    The user types in something.
+
+    """
+    cmd_str = string[3:]
+    if len(string) > 2:
+        if string[:1] == '1':
+            item.traits.val.base = int(cmd_str)
+            caller.msg(f"Set Value to: {item.traits.val.current}")
+        elif string[:1] == '2':
+            item.traits.mass.base = float(cmd_str)
+            caller.msg(f"Set Mass to: {item.traits.mass.current}")
+        elif string[:1] == '3':
+            item.traits.hp.base = int(cmd_str)
+            caller.msg(f"Set HPs to: {item.traits.hp.current}")
+        elif string[:1] == '4':
+            if 0 <= float(cmd_str) <= 1:
+                item.traits.qual.base = float(cmd_str)
+                caller.msg(f"Set Quality to: {item.traits.qual.current}")
+            else:
+                caller.msg("Choose a value between 0 and 1")
+        elif string[:1] == '5':
+            if 0 <= float(cmd_str) <= 1:
+                item.traits.cond.base = float(cmd_str)
+                caller.msg(f"Set Condition to: {item.traits.cond.current}")
+            else:
+                caller.msg("Choose a value between 0 and 1")
+        elif string[:1] == '6':
+            item.traits.cap.base = float(cmd_str)
+            caller.msg(f"Set Capacity to: {item.traits.cap.current}")
+        elif string[:1] == '7':
+            if 0 <= float(cmd_str) <= 1:
+                item.traits.comfort.base = float(cmd_str)
+                caller.msg(f"Set Comfort to: {item.traits.comfort.current}")
+            else:
+                caller.msg("Choose a value between 0 and 1")
+        elif string[:1] == '8':
+            if 0 <= float(cmd_str) <= 1:
+                item.traits.light.base = float(cmd_str)
+                caller.msg(f"Set Light Intensity to: {item.traits.light.current}")
+            else:
+                caller.msg("Choose a value between 0 and 1")
+        elif string[:1] == '9':
+            item.traits.charge.base = int(cmd_str)
+            caller.msg(f"Set # of Charges to: {item.traits.charge.current}")
+
+        else:
+            caller.msg("Unknown Command")
+            return False
+    return

@@ -88,6 +88,12 @@ class MuxCommand(Command):
         """
         pass
 
+    def after_parse(self):
+        """
+        Run after parse() and before func()
+        """
+        pass
+
     def parse(self):
         """
         This method is called by the cmdhandler once the command name
@@ -186,3 +192,4 @@ class MuxCommand(Command):
                 self.character = self.caller.get_puppet(self.session)
             else:
                 self.character = None
+        self.after_parse()
