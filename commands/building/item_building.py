@@ -121,7 +121,7 @@ def text_sculpt(caller, room):
         if utils.inherits_from(item, 'typeclasses.items.Item'):
             index += 1
             text += f"\n    {index}. {item.key}"
-    text += "Type in the number of the item you want to sculpt."
+    text += "\nType in the number of the item you want to sculpt."
     return text
 
 
